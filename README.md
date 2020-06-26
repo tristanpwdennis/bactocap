@@ -3,8 +3,9 @@ This repo contains all the materials required to reproduce the analysis and work
 
 ### Getting started
 
-This project uses Docker to manage all the dependencies. To get started, make sure you have docker installed. Installation instructions by platform are here:
+This project uses Docker to manage all the dependencies, and nextflow to run the analysis. To get started, make sure you have docker installed. Installation instructions by platform are here:
 https://docs.docker.com/engine/install/ . Once you're finished, fire up the terminal and doublecheck with ```docker -v```
+Then, install nextflow: https://www.nextflow.io/docs/latest/getstarted.html . And check in the terminal again to make sure it runs ok.
 
 ### Setup and Docker installations
 
