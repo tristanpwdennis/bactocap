@@ -1,0 +1,11 @@
+Jun-05 10:25:37.313 [main] DEBUG nextflow.cli.Launcher - $> nextflow run align.nf -with-docker
+Jun-05 10:25:37.400 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 20.04.1
+Jun-05 10:25:37.432 [main] DEBUG nextflow.cli.Launcher - Operation aborted
+nextflow.exception.AbortOperationException: Not a valid project name: align.nf
+	at nextflow.scm.AssetManager.resolveName(AssetManager.groovy:246)
+	at nextflow.scm.AssetManager.build(AssetManager.groovy:121)
+	at nextflow.scm.AssetManager.<init>(AssetManager.groovy:105)
+	at nextflow.cli.CmdRun.getScriptFile(CmdRun.groovy:331)
+	at nextflow.cli.CmdRun.run(CmdRun.groovy:245)
+	at nextflow.cli.Launcher.run(Launcher.groovy:460)
+	at nextflow.cli.Launcher.main(Launcher.groovy:642)
