@@ -50,7 +50,6 @@ RUN curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.5.tar.gz -
 RUN mv TrimGalore-0.6.5/trim_galore /usr/local/bin/ && rm -rf TrimGalore-0.6.5
 
 #install multiqc
-
 RUN pip3 install multiqc
 RUN export LC_ALL=C.UTF-8 && export LANG=C.UTF-8
 

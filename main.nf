@@ -155,8 +155,10 @@ process MultiQC {
 
   script:
     """
-    mkdir fastqc_${pair_id}_logs
-    fastqc -o fastqc_${pair_id}_logs -f fastq -q ${reads}
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+
+    multiqc .
     """  
 }
 
