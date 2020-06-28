@@ -6,6 +6,7 @@
  * and read pairs by using the command line options
  */
 
+
 params.reads = "$baseDir/raw_reads/*{_uniq1,_uniq2}.fastq.gz"
 params.fasta = "$baseDir/ref/NC_007530.fasta"
 params.dict = "$baseDir/ref/NC_007530.dict"
@@ -109,18 +110,64 @@ threadmem      = (((Runtime.getRuntime().maxMemory() * 4) / threads) as nextflow
 threadmem_more = 4 * threadmem
 
 
+process ReadTrimming {
+  tag "Trimming ${pair_id}"
+  memory threadmem_more
+  cpus 4
 
+  publishDir "$params.results/${pair_id}"
 
+  input:
+  tuple val(pair_id), path(reads) from read_pairs_ch
 
+  output:
+  tuple val(pair_id), file("*.fq.gz") into trimmed_reads, readsforqc
+
+  script:
+
+  """
+  trim_galore --paired -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT $reads
+  """
+
+}
+
+process FastQC {
+  tag "Performing fastqc on ${pair_id}"
+  input:
+  tuple val(pair_id), path(reads) from readsforqc
+  output:
+  file("fastqc_${pair_id}_logs") into fastqc_ch
+
+  script:
+    """
+    mkdir fastqc_${pair_id}_logs
+    fastqc -o fastqc_${pair_id}_logs -f fastq -q ${reads}
+    """  
+}
+
+process MultiQC {
+  tag "Performing multiqc on fastqc output"
+  publishDir "$params.results/"
+  input:
+  file('*')  from fastqc_ch.collect()
+  output:
+  file('multiqc_report.html')
+
+  script:
+    """
+    mkdir fastqc_${pair_id}_logs
+    fastqc -o fastqc_${pair_id}_logs -f fastq -q ${reads}
+    """  
+}
 
 
 bwa_index = ann.merge(bwt, pac, sa, amb, fasta1)
-ref1 = read_pairs_ch.combine(bwa_index)
+ref1 = trimmed_reads.combine(bwa_index)
 
 //align with bwa
 
 process bwaAlign{
-  tag "${pair_id}"
+  tag "Aligning ${pair_id} to reference: ${fasta1}"
   memory threadmem_more
   cpus 4
 
@@ -141,7 +188,7 @@ process bwaAlign{
 //sambam conversion and sort
 
 process bwaSort{
-  tag "${pair_id}"
+  tag "Samtools sorting ${pair_id}"
   memory threadmem_more
   cpus 4
 
@@ -162,7 +209,7 @@ process bwaSort{
 //Mark duplicate reads
 
 process MarkDuplicates {
-  tag "${pair_id}"
+  tag "Marking duplicate reads for: ${pair_id}"
 
   input:
   tuple val(pair_id), path(bam_file) from bwa_sorted
@@ -182,7 +229,7 @@ process MarkDuplicates {
 //add read groups
 
 process AddOrReplaceReadGroups {
-  tag "${pair_id}"
+  tag "Adding read groups to: ${pair_id}"
   publishDir "$params.results/${pair_id}"
   input:
   tuple val(pair_id), file(bam_file) from dupmarked_ch

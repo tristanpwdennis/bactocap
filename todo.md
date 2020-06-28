@@ -5,7 +5,7 @@
 
 
 ### Anthrax
-#### 1. Add the trimming step to the nf script
+#### 1. Add the trimming step to the nf script - cutadapt
 #### 2. Add the step for generating .bam stats
 
 ### MLST

@@ -25,17 +25,35 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     libcurl4-gnutls-dev \
     libssl-dev \
     libncurses5-dev \
-    git \
     ant \
     software-properties-common \
     gnupg2 \
     datamash \
     bwa \
-    git-lfs
+    git-lfs \
+    curl \
+    unzip \
+    python3-setuptools
 
 
 #install cutadapt
-RUN python3 -m pip install --user --upgrade cutadapt
+RUN pip3 install cutadapt
+
+#get fastqc
+RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.9.zip
+RUN unzip fastqc_v0.11.9.zip && \
+chmod 755 FastQC/fastqc && \
+ln -s $PWD/FastQC/fastqc /usr/local/bin/
+
+#install trim galore!
+RUN curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.5.tar.gz -o trim_galore.tar.gz && tar xvzf trim_galore.tar.gz
+RUN mv TrimGalore-0.6.5/trim_galore /usr/local/bin/ && rm -rf TrimGalore-0.6.5
+
+#install multiqc
+
+RUN pip3 install multiqc
+RUN export LC_ALL=C.UTF-8 && export LANG=C.UTF-8
+
 
 #get and install samtools
 RUN wget https://github.com/samtools/samtools/releases/download/1.10/samtools-1.10.tar.bz2
@@ -44,8 +62,7 @@ WORKDIR samtools-1.10
 RUN ./configure && make && make install
 WORKDIR /
 
-RUN git clone --recursive git://github.com/ekg/freebayes.git
-RUN cd freebayes && make -j4
+
 
 
 
