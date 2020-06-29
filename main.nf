@@ -234,6 +234,7 @@ process AddOrReplaceReadGroups {
 process Qualimap {
   tag "${pair_id}"
   publishDir "$baseDir/results/individual_reports"
+  memory threadmem_more
 
   input:
   tuple val(pair_id), file(bam), file(bai) from bamqc1
@@ -243,7 +244,7 @@ process Qualimap {
 
   script:
   """
-  qualimap bamqc --skip-duplicated -bam "${pair_id}.rg.bam" -outdir "${pair_id}"
+  qualimap bamqc -bam ${pair_id}.rg.bam -outdir ${pair_id}
   """
 
 
