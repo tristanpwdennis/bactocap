@@ -2,11 +2,12 @@
 
 ### All
 #### Add .Rmd/notebook for analysis of read data for all 3 projects
-
+#### Add parameter designation from command line (threads, directories, which pipeline to run)
 
 ### Anthrax
-#### 1. Add the trimming step to the nf script - cutadapt
-#### 2. Add the step for generating .bam stats
+#### 1. Add the trimming step to the nf script - cutadapt [x]
+#### 2. Add the step for generating .bam stats [x]
+#### 3. Add memory and threading optimisation to all processes
 
 ### MLST
 #### 1. Integrate the mlst analysis into the flow
