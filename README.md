@@ -44,7 +44,13 @@ Nextflow caches all the steps, so you don't have to go back to square one with e
 nextflow run main.nf -resume
 ```
 
-The final vcfs and bam files will be published in the ```results``` directory. 
+### Output
+
+
+The final vcfs and bam files will be published in the ```results``` directory in directories according to sample name
+The individual fastqc and bamqc data will be published in the ``` individual_reports directory``` and agglomerated in the ```multiqc_report.html``` document.
+A tab delimited text file ```mapping_stats.csv``` contains the flagstat data for analysis etc
+
 
 
 
