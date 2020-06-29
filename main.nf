@@ -1,5 +1,26 @@
 #!/usr/bin/env nextflow
 
+VERSION="0.1"
+
+log.info "===================================================================="
+log.info "This is the BACTOCAP pipeline (v${VERSION})                        "
+log.info "===================================================================="
+
+params.help = ""
+if (params.help) {
+  log.info " "
+  log.info "The BACTOCAP workflow will run on whichever organism is passed as an argument as shown below. You will be able to specify your own read data and reference genome at some point."
+  log.info " "
+  log.info "USAGE: "
+  log.info " "
+  log.info "nextflow run main.nf --organism <organism>"
+  log.info " "
+  log.info "Arguments:"
+  log.info "    --organism  STRING: anthrax, mlst, mycoplasma  (e.g. --organism anthrax)  Pick whether to run BACTOCAP on anthrax, mlst, or mycoplasma datasets"
+  log.info " "
+  log.info "===================================================================="
+  exit 1
+}
 
 /*
  * Defines some parameters in order to specify the refence genomes
@@ -7,41 +28,16 @@
  */
 
 
-params.reads = "$baseDir/raw_reads/*{_uniq1,_uniq2}.fastq.gz"
-params.fasta = "$baseDir/ref/NC_007530.fasta"
-params.dict = "$baseDir/ref/NC_007530.dict"
-params.fai = "$baseDir/ref/NC_007530.fasta.fai"
-params.bwt = "$baseDir/ref/NC_007530.fasta.bwt"
-params.ann = "$baseDir/ref/NC_007530.fasta.ann"
-params.pac = "$baseDir/ref/NC_007530.fasta.pac"
-params.sa = "$baseDir/ref/NC_007530.fasta.sa"
-params.amb = "$baseDir/ref/NC_007530.fasta.amb"
-params.results = "$baseDir/results"
-
-
-/*
- * Say hello
- */
-
-println """\
-\
-         ===================================
-                   B A C T O C A P 
-         ===================================
-         The reference genome: ${params.fasta}
-         The directory containing the raw reads is: ${params.reads}
-
-         Everything here should be set up for you to reproduce the anthrax, mycoplasma and mlst analyses from the paper XX
-
-         Options THAT DO NOT WORK YET:
-
-         --bactocap-anthrax
-         --bactocap-mycoplasma
-         --mlst
-
-         p.s. please sure the reference genome is indexed with samtools, bwa, and gatk
-
-         """
+params.reads = "$baseDir/anthrax/raw_reads/*{_uniq1,_uniq2}.fastq.gz"
+params.fasta = "$baseDir/anthrax/ref/NC_007530.fasta"
+params.dict = "$baseDir/anthrax/ref/NC_007530.dict"
+params.fai = "$baseDir/anthrax/ref/NC_007530.fasta.fai"
+params.bwt = "$baseDir/anthrax/ref/NC_007530.fasta.bwt"
+params.ann = "$baseDir/anthrax/ref/NC_007530.fasta.ann"
+params.pac = "$baseDir/anthrax/ref/NC_007530.fasta.pac"
+params.sa = "$baseDir/anthrax/ref/NC_007530.fasta.sa"
+params.amb = "$baseDir/anthrax/ref/NC_007530.fasta.amb"
+params.results = "$baseDir/anthrax/results"
 
 /*
  * Take params and turn into channels
@@ -345,7 +341,7 @@ process HaplotypeCaller {
 dbdict = fasta3.merge(dict2, fai2)
 
 
-process genomicsDBImport {
+process GenomicsDBImport {
   tag "Collecting gvcf into genomicsDB"
   input:
   file(gvcf) from gvcf_channel.collect()
@@ -379,7 +375,7 @@ process genomicsDBImport {
 
 genodict = fasta4.merge(dict3, fai3)
 
-process genotypeGVCF {
+process GenotypeGVCF {
   tag "Generating final vcf from gvcfs and genomicdb"
   publishDir "$baseDir/results/"
   input:
