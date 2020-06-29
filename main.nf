@@ -144,24 +144,6 @@ process FastQC {
     """  
 }
 
-process MultiQC {
-  tag "Performing multiqc on fastqc output"
-  publishDir "$params.results/"
-  input:
-  file('*')  from fastqc_ch.collect()
-  output:
-  file('multiqc_report.html')
-
-  script:
-    """
-    export LC_ALL=C.UTF-8
-    export LANG=C.UTF-8
-
-    multiqc .
-    """  
-}
-
-
 bwa_index = ann.merge(bwt, pac, sa, amb, fasta1)
 ref1 = trimmed_reads.combine(bwa_index)
 
@@ -232,7 +214,7 @@ process AddOrReplaceReadGroups {
   tuple val(pair_id), file(bam_file) from dupmarked_ch
 
   output:
-  tuple val(pair_id), file("${pair_id}.rg.bam"), file("${pair_id}.rg.bai") into rg_bam, bamqc
+  tuple val(pair_id), file("${pair_id}.rg.bam"), file("${pair_id}.rg.bai") into rg_bam, bamqc1, bamqc2
 
   script:
   """
@@ -248,6 +230,65 @@ process AddOrReplaceReadGroups {
 
   """
 }
+
+process Qualimap {
+  tag "${pair_id}"
+  publishDir "$baseDir/results/individual_reports"
+
+  input:
+  tuple val(pair_id), file(bam), file(bai) from bamqc1
+
+  output:
+  file ("${pair_id}") into qualimap_results
+
+  script:
+  """
+  qualimap bamqc --skip-duplicated -bam "${pair_id}.rg.bam" -outdir "${pair_id}"
+
+  """
+
+
+}
+
+process Flagstat {
+  tag "${pair_id}"
+  publishDir "$baseDir/results/individual_reports"
+
+  input:
+  tuple val(pair_id), file(bam), file(bai) from bamqc2
+
+  output:
+  file ("${pair_id}.stats.txt") into flagstat_results
+
+  script:
+  """
+  samtools flagstat ${pair_id}.rg.bam > ${pair_id}.stats.txt
+  """
+
+
+}
+
+
+process MultiQC {
+  tag "Performing multiqc on fastqc output"
+  publishDir "$params.results/"
+  input:
+  file('*')  from fastqc_ch.collect()
+  file('*') from qualimap_results.collect()
+  file('*')from flagstat_results.collect()
+
+  output:
+  file('multiqc_report.html')
+
+  script:
+    """
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+
+    multiqc .
+    """  
+}
+
 
 //merge reference and bam data into one channel
 gatk_dict = fasta2.merge(dict1, fai1)
@@ -338,29 +379,5 @@ process genotypeGVCF {
 
 
 }
-
-process genotypeGVCF {
-  tag "Collecting mapping stats from ${pair_id}"
-  publishDir "$baseDir/results/"
-  input:
-  tuple file(fasta4), file(dict3), file(fai3) from genodict
-  file(genomics_db) from genodb_ch
-
-  output:
-  file("final_anthrax.vcf") into finalvcf_ch
-
-  script:
-  """
-  gatk GenotypeGVCFs \
-  -R ${fasta4} \
-  -V gendb://genomics_db \
-  -O final_anthrax.vcf
-  """
-
-}
-
-process CollectMappingStats {}
-
-
 
 
