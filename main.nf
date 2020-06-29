@@ -140,6 +140,7 @@ process FastQC {
   script:
     """
     mkdir fastqc_${pair_id}_logs
+
     fastqc -o fastqc_${pair_id}_logs -f fastq -q ${reads}
     """  
 }
@@ -227,7 +228,6 @@ process AddOrReplaceReadGroups {
   -SM ${pair_id} 
 
   samtools index ${pair_id}.rg.bam ${pair_id}.rg.bai
-
   """
 }
 
@@ -279,16 +279,13 @@ process FlagstatCollect  {
   file("mapping_stats.csv") into flagtextfile_ch
   script:
   """
+  printf sample_id,total,secondary,supplementary,duplicates,mapped,paired,read1,read2,properly_paired,with_itself_and_mate_mapped,singletons,mate_on_diff_chr,mate_on_diff_chrover5,"\n" > mapping_stats.csv
 
-printf sample_id,total,secondary,supplementary,duplicates,mapped,paired,read1,read2,properly_paired,with_itself_and_mate_mapped,singletons,mate_on_diff_chr,mate_on_diff_chrover5,"\n" > mapping_stats.csv
-
-for f in *txt
-do 
-  flag=`< \$f cut -d \\+ -f 1 | tr -s '[:blank:]' ','` 
-  echo "\${f%.stats.txt}",\$flag | tr -d ' ' >> mapping_stats.csv
-done
-
-
+  for f in *txt
+  do 
+   flag=`< \$f cut -d \\+ -f 1 | tr -s '[:blank:]' ','` 
+   echo "\${f%.stats.txt}",\$flag | tr -d ' ' >> mapping_stats.csv
+  done
   """
 }
 
@@ -304,12 +301,12 @@ process MultiQC {
   file('multiqc_report.html')
 
   script:
-    """
-    export LC_ALL=C.UTF-8
-    export LANG=C.UTF-8
+  """
+  export LC_ALL=C.UTF-8
+  export LANG=C.UTF-8
 
-    multiqc .
-    """  
+  multiqc .
+  """  
 }
 
 
@@ -361,7 +358,7 @@ process genomicsDBImport {
 
   script:
 """
-#make list of vcf files for import to genomicsdb
+  #make list of vcf files for import to genomicsdb
 
   for vcf in \$(ls *.vcf); do
     echo \$vcf >> input_variant_files.list
