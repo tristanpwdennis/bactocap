@@ -244,13 +244,12 @@ process Qualimap {
   script:
   """
   qualimap bamqc --skip-duplicated -bam "${pair_id}.rg.bam" -outdir "${pair_id}"
-
   """
 
 
 }
 
-process Flagstat {
+process FlagstatRun {
   tag "${pair_id}"
   publishDir "$baseDir/results/individual_reports"
 
@@ -259,15 +258,38 @@ process Flagstat {
 
   output:
   file ("${pair_id}.stats.txt") into flagstat_results
+  file ("${pair_id}.stats.txt") into flagstat_collect
+
 
   script:
   """
   samtools flagstat ${pair_id}.rg.bam > ${pair_id}.stats.txt
   """
 
-
 }
 
+process FlagstatCollect  {
+  publishDir "$baseDir/results/"
+  input: 
+  file(flagfile) from flagstat_collect.toList()
+
+
+  output: 
+  file("mapping_stats.csv") into flagtextfile_ch
+  script:
+  """
+
+printf sample_id,total,secondary,supplementary,duplicates,mapped,paired,read1,read2,properly_paired,with_itself_and_mate_mapped,singletons,mate_on_diff_chr,mate_on_diff_chrover5,"\n" > mapping_stats.csv
+
+for f in *txt
+do 
+  flag=`< \$f cut -d \\+ -f 1 | tr -s '[:blank:]' ','` 
+  echo "\${f%.stats.txt}",\$flag | tr -d ' ' >> mapping_stats.csv
+done
+
+
+  """
+}
 
 process MultiQC {
   tag "Performing multiqc on fastqc output"
