@@ -4,6 +4,11 @@ FROM ubuntu:18.04
 # File Author / Maintainer
 MAINTAINER Tristan Dennis <tristanpwdennis@gmail.com>
 
+#configure time zone and install tzdata for base -r installation
+
+RUN export DEBIAN_FRONTEND=noninteractive && ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime
+
+
 #get bits and pieces
 RUN apt-get update && apt-get install --yes --no-install-recommends \
     wget \
@@ -33,7 +38,9 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     git-lfs \
     curl \
     unzip \
-    python3-setuptools
+    python3-setuptools \
+    tzdata \
+    r-base 
 
 
 #install cutadapt

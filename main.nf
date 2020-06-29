@@ -104,7 +104,6 @@ Channel
 }
 
 //Allocate memory
-
 int threads    = Runtime.getRuntime().availableProcessors()
 threadmem      = (((Runtime.getRuntime().maxMemory() * 4) / threads) as nextflow.util.MemoryUnit)
 threadmem_more = 4 * threadmem
@@ -167,7 +166,6 @@ bwa_index = ann.merge(bwt, pac, sa, amb, fasta1)
 ref1 = trimmed_reads.combine(bwa_index)
 
 //align with bwa
-
 process bwaAlign{
   tag "Aligning ${pair_id} to reference: ${fasta1}"
   memory threadmem_more
@@ -188,7 +186,6 @@ process bwaAlign{
 }
 
 //sambam conversion and sort
-
 process bwaSort{
   tag "Samtools sorting ${pair_id}"
   memory threadmem_more
@@ -209,7 +206,6 @@ process bwaSort{
 }
 
 //Mark duplicate reads
-
 process MarkDuplicates {
   tag "Marking duplicate reads for: ${pair_id}"
 
@@ -229,7 +225,6 @@ process MarkDuplicates {
 }
 
 //add read groups
-
 process AddOrReplaceReadGroups {
   tag "Adding read groups to: ${pair_id}"
   publishDir "$params.results/${pair_id}"
@@ -237,7 +232,7 @@ process AddOrReplaceReadGroups {
   tuple val(pair_id), file(bam_file) from dupmarked_ch
 
   output:
-  tuple val(pair_id), file("${pair_id}.rg.bam"), file("${pair_id}.rg.bai") into rg_bam 
+  tuple val(pair_id), file("${pair_id}.rg.bam"), file("${pair_id}.rg.bai") into rg_bam, bamqc
 
   script:
   """
@@ -254,13 +249,9 @@ process AddOrReplaceReadGroups {
   """
 }
 
-
-//IT IS SOMETHING TO DO WITH REFERENCE GENOME
-//WHEN WE ADD REFERENCE GENOME ALL OF A SUDDEN IT TURNS FROM 3 PROCESSES TO ONE PROCESS
-
+//merge reference and bam data into one channel
 gatk_dict = fasta2.merge(dict1, fai1)
 haplotypecaller = rg_bam.combine(gatk_dict)
-
 
 process HaplotypeCaller {
   tag "Calling variants for: ${pair_id}"
@@ -289,7 +280,9 @@ process HaplotypeCaller {
     """
 }
 
+//collect fasta, dict and fai data into a channel
 dbdict = fasta3.merge(dict2, fai2)
+
 
 process genomicsDBImport {
   tag "Collecting gvcf into genomicsDB"
@@ -304,7 +297,7 @@ process genomicsDBImport {
 
   script:
 """
-#make list
+#make list of vcf files for import to genomicsdb
 
   for vcf in \$(ls *.vcf); do
     echo \$vcf >> input_variant_files.list
@@ -322,7 +315,6 @@ process genomicsDBImport {
 """
 
 }
-
 
 genodict = fasta4.merge(dict3, fai3)
 
@@ -347,6 +339,27 @@ process genotypeGVCF {
 
 }
 
+process genotypeGVCF {
+  tag "Collecting mapping stats from ${pair_id}"
+  publishDir "$baseDir/results/"
+  input:
+  tuple file(fasta4), file(dict3), file(fai3) from genodict
+  file(genomics_db) from genodb_ch
+
+  output:
+  file("final_anthrax.vcf") into finalvcf_ch
+
+  script:
+  """
+  gatk GenotypeGVCFs \
+  -R ${fasta4} \
+  -V gendb://genomics_db \
+  -O final_anthrax.vcf
+  """
+
+}
+
+process CollectMappingStats {}
 
 
 
