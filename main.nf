@@ -260,8 +260,6 @@ process Qualimap {
   """
   qualimap bamqc -bam ${pair_id}.rg.bam -outdir ${pair_id}
   """
-
-
 }
 
 process FlagstatRun {
@@ -280,7 +278,6 @@ process FlagstatRun {
   """
   samtools flagstat ${pair_id}.rg.bam > ${pair_id}.stats.txt
   """
-
 }
 
 process FlagstatCollect  {
@@ -323,6 +320,23 @@ process MultiQC {
   """  
 }
 
+//here we choose whether to follow the mlst or the anthrax/mycoplasma workflow
+// if the dataset argument follows mlst then we follow the mlst processes detailed below
+if (params.dataset == "mlst") {
+
+//mlst processes follow
+process TestProcess {
+  tag "This is the mlst section"
+  script:
+  """
+  echo "MLST processes"
+  """
+}
+
+
+//if a non-mlst option is chosen (e.g. anthrax or mycoplasma), then we follow the alternate workflow pattern
+//the closing brace is after the last process
+} else {
 
 //merge reference and bam data into one channel
 gatk_dict = fasta2.merge(dict1, fai1)
@@ -388,7 +402,6 @@ process GenomicsDBImport {
   --reader-threads 3 
 
 """
-
 }
 
 genodict = fasta4.merge(dict3, fai3)
@@ -410,8 +423,7 @@ process GenotypeGVCF {
   -V gendb://genomics_db \
   -O final_anthrax.vcf
   """
-
-
 }
 
-
+//closing brace for non mlst process block
+}
