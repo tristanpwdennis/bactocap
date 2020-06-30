@@ -64,7 +64,7 @@ params.results = "${dirpath}/results"
 
 if (params.reads) {
 Channel
-    .fromFilePairs( params.reads )
+    .fromFilePairs( params.reads, flat:true )
     .ifEmpty { error "Cannot find any reads matching: ${params.reads}" }
     .set { read_pairs_ch } 
 }
@@ -131,15 +131,15 @@ process ReadTrimming {
   publishDir "$params.results/${pair_id}"
 
   input:
-  tuple val(pair_id), path(reads) from read_pairs_ch
+  tuple val(pair_id), file(mate1), file(mate2) from read_pairs_ch
 
   output:
-  tuple val(pair_id), file("*.fq.gz") into trimmed_reads, readsforqc
+  tuple val(pair_id), file("${pair_id}_trim_R1.fastq.gz"), file("${pair_id}_trim_R2.fastq.gz") into trimmed_reads, readsforqc
 
   script:
 
   """
-  trim_galore --paired -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTAGATCTCGGTGGTCGCCGTATCATT $reads
+  fastp -i $mate1 -I $mate2 -o ${pair_id}_trim_R1.fastq.gz -O ${pair_id}_trim_R2.fastq.gz
   """
 
 }
@@ -147,7 +147,7 @@ process ReadTrimming {
 process FastQC {
   tag "Performing fastqc on ${pair_id}"
   input:
-  tuple val(pair_id), path(reads) from readsforqc
+  tuple val(pair_id), file(read1), file(read2) from readsforqc
   output:
   file("fastqc_${pair_id}_logs") into fastqc_ch
 
@@ -155,7 +155,7 @@ process FastQC {
     """
     mkdir fastqc_${pair_id}_logs
 
-    fastqc -o fastqc_${pair_id}_logs -f fastq -q ${reads}
+    fastqc -o fastqc_${pair_id}_logs -f fastq -q $read1 $read2
     """  
 }
 
@@ -169,7 +169,7 @@ process bwaAlign{
   cpus 4
 
   input:
-  tuple val(pair_id), path(reads), file(bwt), file(ann), file(pac), file(sa), file(amb), file(fasta1) from ref1
+  tuple val(pair_id), path(read1), path(read2), file(bwt), file(ann), file(pac), file(sa), file(amb), file(fasta1) from ref1
 
   output:
   tuple val(pair_id), file("${pair_id}.sam") into bwa_bam
@@ -177,7 +177,7 @@ process bwaAlign{
   script:
 
   """
-  bwa mem -t ${task.cpus} ${fasta1} $reads > ${pair_id}.sam
+  bwa mem -t ${task.cpus} ${fasta1} $read1 $read2 > ${pair_id}.sam
   """
 
 }
