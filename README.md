@@ -37,18 +37,31 @@ When the project is further advanced, the read data for the bactocap project wil
 ### Running the workflow
 It's as simple as running 
 ```
-nextflow run main.nf
+nextflow run main.nf --help
+```
+This will prompt the USAGE statement and some brief pointers.
+```
+===================================================================
+This is the BACTOCAP pipeline (VERSION)                        
+===================================================================
+The BACTOCAP workflow will run on whichever dataset is passed as an argument as shown below. 
+
+USAGE: 
+
+nextflow run main.nf --organism <organism>
+
+Arguments:
+   --dataset  STRING: anthrax, mlst, mycoplasma  (e.g. --organism anthrax)  Pick whether to run BACTOCAP on anthrax, mlst, or mycoplasma datasets
+====================================================================
 ```
 Nextflow caches all the steps, so you don't have to go back to square one with each reanalysis. Just add more data to the raw_reads directory, or restart if you accidentally shut off your machine with
 ```
 nextflow run main.nf -resume
 ```
-
 ### Output
 
-
-The final vcfs and bam files will be published in the ```results``` directory in directories according to sample name
-The individual fastqc and bamqc data will be published in the ``` individual_reports directory``` and agglomerated in the ```multiqc_report.html``` document.
+The final vcfs and bam files will be published in the ```results``` directory in each dataset directory according to sample name
+The individual fastqc and bamqc data will be published in the ``` individual_reports``` subdirectory and agglomerated in the ```multiqc_report.html``` document.
 A tab delimited text file ```mapping_stats.csv``` contains the flagstat data for analysis etc
 
 
