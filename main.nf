@@ -27,17 +27,35 @@ if (params.help) {
  * and read pairs by using the command line options
  */
 
+if (params.organism == "anthrax") {
 
-params.reads = "$baseDir/anthrax/raw_reads/*{_uniq1,_uniq2}.fastq.gz"
-params.fasta = "$baseDir/anthrax/ref/NC_007530.fasta"
-params.dict = "$baseDir/anthrax/ref/NC_007530.dict"
-params.fai = "$baseDir/anthrax/ref/NC_007530.fasta.fai"
-params.bwt = "$baseDir/anthrax/ref/NC_007530.fasta.bwt"
-params.ann = "$baseDir/anthrax/ref/NC_007530.fasta.ann"
-params.pac = "$baseDir/anthrax/ref/NC_007530.fasta.pac"
-params.sa = "$baseDir/anthrax/ref/NC_007530.fasta.sa"
-params.amb = "$baseDir/anthrax/ref/NC_007530.fasta.amb"
-params.results = "$baseDir/anthrax/results"
+  dirpath = "$baseDir/datasets/anthrax"
+
+} else if (params.organism == "mlst") {
+
+  dirpath = "$baseDir/datasets/mlst"
+
+} else if (params.organism == "mycoplasma") {
+
+  dirpath = "$baseDir/datasets/mycoplasma"
+
+} else {
+
+  println "Organism not specified, please specify organism as shown in --help"
+
+}
+
+params.reads = "${dirpath}/raw_reads/*{R1_001,R2_001}.fastq.gz"
+params.fasta = "${dirpath}/ref/*.fasta"
+params.dict = "${dirpath}/ref/*.dict"
+params.fai = "${dirpath}/ref/*.fasta.fai"
+params.bwt = "${dirpath}/ref/*.fasta.bwt"
+params.ann = "${dirpath}/ref/*.fasta.ann"
+params.pac = "${dirpath}/ref/*.fasta.pac"
+params.sa = "${dirpath}/ref/*.fasta.sa"
+params.amb = "${dirpath}/ref/*.fasta.amb"
+params.results = "${dirpath}/results"
+
 
 /*
  * Take params and turn into channels
