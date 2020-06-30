@@ -18,6 +18,8 @@ if (params.help) {
   log.info "Arguments:"
   log.info "    --dataset  STRING: anthrax, mlst, mycoplasma  (e.g. --organism anthrax)  Pick whether to run BACTOCAP on anthrax, mlst, or mycoplasma datasets"
   log.info " "
+  log.info "Optional arguments:"
+  log.info "    --mappingonly     Will not run variant calling"
   log.info "===================================================================="
   exit 1
 }
@@ -322,11 +324,11 @@ process MultiQC {
 
 //here we choose whether to follow the mlst or the anthrax/mycoplasma workflow
 // if the dataset argument follows mlst then we follow the mlst processes detailed below
-if (params.dataset == "mlst") {
+if (params.mappingonly) {
 
 //mlst processes follow
-process TestProcess {
-  tag "This is the mlst section"
+process PlaceholderProcess {
+  tag "This is a placeholder until I decide on a final mlst process"
   script:
   """
   echo "MLST processes"
