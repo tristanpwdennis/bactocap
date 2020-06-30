@@ -48,7 +48,7 @@ The BACTOCAP workflow will run on whichever dataset is passed as an argument as 
 
 USAGE: 
 
-nextflow run main.nf --organism <organism>
+nextflow run main.nf --dataset <dataset>
 
 Arguments:
    --dataset  STRING: anthrax, mlst, mycoplasma  (e.g. --organism anthrax)  Pick whether to run BACTOCAP on anthrax, mlst, or mycoplasma datasets
