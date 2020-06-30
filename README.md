@@ -52,6 +52,8 @@ nextflow run main.nf --dataset <dataset>
 
 Arguments:
    --dataset  STRING: anthrax, mlst, mycoplasma  (e.g. --organism anthrax)  Pick whether to run BACTOCAP on anthrax, mlst, or mycoplasma datasets
+Optional arguments:
+   --mappingonly     Will not run variant calling
 ====================================================================
 ```
 Nextflow caches all the steps, so you don't have to go back to square one with each reanalysis. Just add more data to the raw_reads directory, or restart if you accidentally shut off your machine with
