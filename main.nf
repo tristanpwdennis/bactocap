@@ -13,7 +13,7 @@ if (params.help) {
   log.info " "
   log.info "USAGE: "
   log.info " "
-  log.info "nextflow run main.nf --organism <organism>"
+  log.info "nextflow run main.nf --dataset <dataset>"
   log.info " "
   log.info "Arguments:"
   log.info "    --dataset  STRING: anthrax, mlst, mycoplasma  (e.g. --organism anthrax)  Pick whether to run BACTOCAP on anthrax, mlst, or mycoplasma datasets"
