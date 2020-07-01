@@ -3,7 +3,7 @@
 VERSION="0.1"
 
 log.info "===================================================================="
-log.info "This is the BACTOCAP pipeline (v${VERSION})                        "
+log.info "                B A C T O C A P       (v${VERSION})                 "
 log.info "===================================================================="
 
 params.help = ""
