@@ -32,7 +32,7 @@ docker images
 You should see the gatk and align repos are in the list.
 
 ### Data
-When the project is further advanced, the read data for the bactocap project will be available on sra, and I will include fastq-dump commands in the workflow that will enable download of the data. Right now, however, we will have to make do the cheapo way, so please put some trimmed read files of your own into the raw_reads directory.
+When the project is further advanced, the read data for the bactocap project will be available on sra, and I will include fastq-dump commands in the workflow that will enable download of the data. Right now, however, we will have to make do the cheapo way, so please put some trimmed read files of your own into the raw_reads subdirectory, located ```datasets/<dataset>/raw_reads``` - choose whichever is appropriate for your project.
 
 ### Running the workflow
 It's as simple as running 
