@@ -1,0 +1,2 @@
+WARNING: Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.
+/home/ubuntu/onchogenome/bactocap/work/ae/96707a77709e0b53ff01a31b04df69/.command.sh: line 2: fastp: command not found
