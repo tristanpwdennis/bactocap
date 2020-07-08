@@ -187,8 +187,6 @@ process bwaAlign{
 //sambam conversion and sort
 process bwaSort{
   tag "Samtools sorting ${pair_id}"
-  memory threadmem_more
-  cpus 4
 
   input:
   tuple val(pair_id), file(sam) from bwa_bam

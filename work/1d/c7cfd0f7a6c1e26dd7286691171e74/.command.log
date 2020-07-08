@@ -1,3 +1,0 @@
-WARNING: Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.
-/home/ubuntu/onchogenome/bactocap/work/1d/c7cfd0f7a6c1e26dd7286691171e74/.command.sh: line 2: fastp: command not found
-Error response from daemon: Cannot kill container nxf-0kYAhwr0EJ97V1xrJHp0fBnI: No such container: nxf-0kYAhwr0EJ97V1xrJHp0fBnI

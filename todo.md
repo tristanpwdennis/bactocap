@@ -3,6 +3,9 @@
 ### All
 #### Add .Rmd/notebook for analysis of read data for all 3 projects
 #### Add parameter designation from command line (threads, directories, which pipeline to run) [x] of []
+#### Memory often an issue - add to readme
+#### Remove raw reads from top directory
+
 
 ### Anthrax
 #### 1. Add the trimming step to the nf script - cutadapt [x]
