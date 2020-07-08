@@ -197,7 +197,7 @@ process bwaSort{
   script:
 
   """
-  samtools sort -o ${pair_id}.srt.bam -O BAM $sam
+  samtools sort -m 4G -o ${pair_id}.srt.bam -O BAM $sam
   """
 
 }
