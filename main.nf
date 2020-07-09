@@ -197,7 +197,7 @@ process bwaSort{
   script:
 
   """
-  samtools view -bS $sam | samtools sort > ${pair_id}.srt.bam
+  gatk SortSam -I $sam -O "${pair_id}.srt.bam" -SO coordinate
   """
 
 }
