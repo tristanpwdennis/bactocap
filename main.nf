@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-
+NXF_OPTS='-Xms512M -Xmx2G'
 VERSION="0.1"
 
 log.info "===================================================================="
@@ -197,7 +197,7 @@ process bwaSort{
   script:
 
   """
-  gatk SortSam -I $sam -O "${pair_id}.srt.bam" -SO coordinate
+  gatk SortSam -I $sam -O ${pair_id}.srt.bam -SO coordinate
   """
 
 }
