@@ -247,7 +247,7 @@ process AddOrReplaceReadGroups {
 
 process Qualimap {
   tag "${pair_id}"
-  publishDir "$baseDir/results/individual_reports"
+  publishDir "$params.results/${pair_id}"
   memory threadmem_more
 
   input:
@@ -258,7 +258,7 @@ process Qualimap {
 
   script:
   """
-  qualimap bamqc -bam ${pair_id}.rg.bam -outdir ${results}/${pair_id}
+  qualimap bamqc -bam ${pair_id}.rg.bam -outdir ${pair_id}
   """
 }
 
@@ -302,7 +302,7 @@ process FlagstatCollect  {
 
 process MultiQC {
   tag "Performing multiqc on fastqc output"
-  publishDir "${results}"
+  publishDir "$params.results"
   input:
   file('*')  from fastqc_ch.collect()
   file('*') from qualimap_results.collect()
@@ -344,7 +344,7 @@ haplotypecaller = rg_bam.combine(gatk_dict)
 
 process HaplotypeCaller {
   tag "Calling variants for: ${pair_id}"
-  publishDir "${results}/${pair_id}"
+  publishDir "$params.results/${pair_id}"
   input:
 
   tuple val(pair_id), file(bam), file(bai), file(fasta2), file(dict1), file(fai1) from haplotypecaller
