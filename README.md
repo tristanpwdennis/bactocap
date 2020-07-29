@@ -60,6 +60,11 @@ Nextflow caches all the steps, so you don't have to go back to square one with e
 ```
 nextflow run main.nf -resume
 ```
+
+Note, I quite like running these scripts in screen sessions: https://linuxize.com/post/how-to-use-linux-screen/
+This allows me to run the workflow, check on it periodically as it runs on the other screen, whilst I tool about doing other stuff. It also reduces the likelihood of that scenario where you accidentally close your laptop when you have a terminal session running and halt your analysis - TD
+
+
 ### Output
 
 The final vcfs and bam files will be published in the ```results``` directory in each dataset directory according to sample name
