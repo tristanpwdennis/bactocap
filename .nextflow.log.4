@@ -1,0 +1,167 @@
+Jul-29 12:37:37.960 [main] DEBUG nextflow.cli.Launcher - $> nextflow run main.nf --dataset anthrax --mappingonly -resume
+Jul-29 12:37:38.110 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 20.04.1
+Jul-29 12:37:38.125 [main] INFO  nextflow.cli.CmdRun - Launching `main.nf` [infallible_agnesi] - revision: 1551d598fb
+Jul-29 12:37:38.147 [main] DEBUG nextflow.config.ConfigBuilder - Found config local: /Users/tristanpwdennis/Projects/bactocap/nextflow.config
+Jul-29 12:37:38.147 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /Users/tristanpwdennis/Projects/bactocap/nextflow.config
+Jul-29 12:37:38.172 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Jul-29 12:37:38.596 [main] DEBUG nextflow.Session - Session uuid: 638b041f-8a2a-4434-9d6d-9518941bde13
+Jul-29 12:37:38.596 [main] DEBUG nextflow.Session - Run name: infallible_agnesi
+Jul-29 12:37:38.597 [main] DEBUG nextflow.Session - Executor pool size: 8
+Jul-29 12:37:38.635 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 20.04.1 build 5335
+  Created: 03-05-2020 19:37 UTC (20:37 BST)
+  System: Mac OS X 10.14.6
+  Runtime: Groovy 2.5.8 on Java HotSpot(TM) 64-Bit Server VM 13+33
+  Encoding: UTF-8 (UTF-8)
+  Process: 30007@Tristans-MacBook-Pro.local [192.168.0.16]
+  CPUs: 8 - Mem: 8 GB (23.9 MB) - Swap: 5 GB (1.2 GB)
+Jul-29 12:37:38.665 [main] DEBUG nextflow.Session - Work-dir: /Users/tristanpwdennis/Projects/bactocap/work [Mac OS X]
+Jul-29 12:37:38.666 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /Users/tristanpwdennis/Projects/bactocap/bin
+Jul-29 12:37:38.690 [main] DEBUG nextflow.Session - Observer factory: TowerFactory
+Jul-29 12:37:38.692 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Jul-29 12:37:38.878 [main] DEBUG nextflow.Session - Session start invoked
+Jul-29 12:37:39.298 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Jul-29 12:37:39.305 [main] DEBUG nextflow.Session - Workflow process names [dsl1]: AddOrReplaceReadGroups, Qualimap, MultiQC, PlaceholderProcess, GenomicsDBImport, FastQC, GenotypeGVCF, FlagstatCollect, ReadTrimming, bwaSort, HaplotypeCaller, bwaAlign, FlagstatRun, MarkDuplicates
+Jul-29 12:37:39.329 [main] INFO  nextflow.Nextflow - ====================================================================
+Jul-29 12:37:39.332 [main] INFO  nextflow.Nextflow -                 B A C T O C A P       (v0.1)                 
+Jul-29 12:37:39.332 [main] INFO  nextflow.Nextflow - ====================================================================
+Jul-29 12:37:39.363 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/raw_reads/; pattern: *{R1_001,R2_001}.fastq.gz; options: [:]
+Jul-29 12:37:39.424 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/ref/; pattern: *.fasta; options: [:]
+Jul-29 12:37:39.443 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/ref/; pattern: *.dict; options: [:]
+Jul-29 12:37:39.447 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/ref/; pattern: *.fasta.fai; options: [:]
+Jul-29 12:37:39.450 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/ref/; pattern: *.fasta.bwt; options: [:]
+Jul-29 12:37:39.452 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/ref/; pattern: *.fasta.ann; options: [:]
+Jul-29 12:37:39.454 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/ref/; pattern: *.fasta.pac; options: [:]
+Jul-29 12:37:39.456 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/ref/; pattern: *.fasta.sa; options: [:]
+Jul-29 12:37:39.457 [PathVisitor-1] DEBUG nextflow.file.PathVisitor - files for syntax: glob; folder: /Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/ref/; pattern: *.fasta.amb; options: [:]
+Jul-29 12:37:39.516 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:ReadTrimming` matches process ReadTrimming
+Jul-29 12:37:39.518 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.519 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.523 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Jul-29 12:37:39.528 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=8; memory=8 GB; capacity=8; pollInterval=100ms; dumpInterval=5m
+Jul-29 12:37:39.589 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:FastQC` matches process FastQC
+Jul-29 12:37:39.590 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.590 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.615 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:bwaAlign` matches process bwaAlign
+Jul-29 12:37:39.615 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.615 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.620 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:bwaSort` matches process bwaSort
+Jul-29 12:37:39.620 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.620 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.625 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:MarkDuplicates` matches process MarkDuplicates
+Jul-29 12:37:39.626 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.626 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.631 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:AddOrReplaceReadGroups` matches process AddOrReplaceReadGroups
+Jul-29 12:37:39.631 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.631 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.637 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:Qualimap` matches process Qualimap
+Jul-29 12:37:39.637 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.637 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.642 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:FlagstatRun` matches process FlagstatRun
+Jul-29 12:37:39.642 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.642 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.657 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:FlagstatCollect` matches process FlagstatCollect
+Jul-29 12:37:39.657 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.657 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.667 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:MultiQC` matches process MultiQC
+Jul-29 12:37:39.668 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.668 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.671 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Jul-29 12:37:39.671 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Jul-29 12:37:39.677 [main] DEBUG nextflow.script.ScriptRunner - > Await termination 
+Jul-29 12:37:39.677 [main] DEBUG nextflow.Session - Session await
+Jul-29 12:37:39.761 [Actor Thread 5] INFO  nextflow.processor.TaskProcessor - [59/d15e88] Cached process > PlaceholderProcess (This is a placeholder until I decide on a final mlst process)
+Jul-29 12:37:39.761 [Actor Thread 2] INFO  nextflow.processor.TaskProcessor - [ee/327664] Cached process > ReadTrimming (Trimming AN17-27-A-S_S6)
+Jul-29 12:37:39.779 [Actor Thread 4] INFO  nextflow.processor.TaskProcessor - [fc/0e9d89] Cached process > FastQC (Performing fastqc on AN17-27-A-S_S6)
+Jul-29 12:37:39.783 [Actor Thread 7] INFO  nextflow.processor.TaskProcessor - [3f/24eade] Cached process > bwaAlign (Aligning AN17-27-A-S_S6 to reference: NC_007530.fasta)
+Jul-29 12:37:39.790 [Actor Thread 5] INFO  nextflow.processor.TaskProcessor - [06/4495be] Cached process > bwaSort (Samtools sorting AN17-27-A-S_S6)
+Jul-29 12:37:39.795 [Actor Thread 4] INFO  nextflow.processor.TaskProcessor - [fb/5bda4f] Cached process > MarkDuplicates (Marking duplicate reads for: AN17-27-A-S_S6)
+Jul-29 12:37:39.800 [Actor Thread 4] INFO  nextflow.processor.TaskProcessor - [b8/ca98bd] Cached process > AddOrReplaceReadGroups (Adding read groups to: AN17-27-A-S_S6)
+Jul-29 12:37:39.848 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Jul-29 12:37:39.852 [Task submitter] INFO  nextflow.Session - [2b/b00c23] Submitted process > FlagstatRun (AN17-27-A-S_S6)
+Jul-29 12:37:39.859 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Jul-29 12:37:39.859 [Task submitter] INFO  nextflow.Session - [e2/2f0b00] Submitted process > Qualimap (AN17-27-A-S_S6)
+Jul-29 12:38:17.196 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 8; name: FlagstatRun (AN17-27-A-S_S6); status: COMPLETED; exit: 0; error: -; workDir: /Users/tristanpwdennis/Projects/bactocap/work/2b/b00c234497fb1b708a83a4dbbe1141]
+Jul-29 12:38:17.277 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Jul-29 12:38:17.278 [Task submitter] INFO  nextflow.Session - [23/56254f] Submitted process > FlagstatCollect
+Jul-29 12:38:18.880 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 10; name: FlagstatCollect; status: COMPLETED; exit: 0; error: -; workDir: /Users/tristanpwdennis/Projects/bactocap/work/23/56254f3b3d4dfe18e8bf5e6b2d4223]
+Jul-29 12:42:39.672 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor local > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 9; name: Qualimap (AN17-27-A-S_S6); status: RUNNING; exit: -; error: -; workDir: /Users/tristanpwdennis/Projects/bactocap/work/e2/2f0b00abddd0f1f1c27237f5dfde70]
+Jul-29 12:45:15.945 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 9; name: Qualimap (AN17-27-A-S_S6); status: COMPLETED; exit: 0; error: -; workDir: /Users/tristanpwdennis/Projects/bactocap/work/e2/2f0b00abddd0f1f1c27237f5dfde70]
+Jul-29 12:45:15.962 [Task monitor] DEBUG nextflow.processor.TaskProcessor - Process `Qualimap (AN17-27-A-S_S6)` is unable to find [UnixPath]: `/Users/tristanpwdennis/Projects/bactocap/work/e2/2f0b00abddd0f1f1c27237f5dfde70/AN17-27-A-S_S6` (pattern: `AN17-27-A-S_S6`)
+Jul-29 12:45:16.147 [Task monitor] ERROR nextflow.processor.TaskProcessor - Error executing process > 'Qualimap (AN17-27-A-S_S6)'
+
+Caused by:
+  Missing output file(s) `AN17-27-A-S_S6` expected by process `Qualimap (AN17-27-A-S_S6)`
+
+Command executed:
+
+  qualimap bamqc -bam AN17-27-A-S_S6.rg.bam -outdir /Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/results/AN17-27-A-S_S6
+
+Command exit status:
+  0
+
+Command output:
+  Java memory size is set to 1200M
+  Launching application...
+  
+  QualiMap v.2.2.1
+  Built on 2016-10-03 18:14
+  
+  Selected tool: bamqc
+  Available memory (Mb): 35
+  Max memory (Mb): 1258
+  Starting bam qc....
+  Loading sam header...
+  Loading locator...
+  Loading reference...
+  Number of windows: 400, effective number of windows: 400
+  Chunk of reads size: 1000
+  Number of threads: 4
+  Processed 50 out of 400 windows...
+  Processed 100 out of 400 windows...
+  Processed 150 out of 400 windows...
+  Processed 200 out of 400 windows...
+  Processed 250 out of 400 windows...
+  Processed 300 out of 400 windows...
+  Processed 350 out of 400 windows...
+  Processed 400 out of 400 windows...
+  Total processed windows:400
+  Number of reads: 24878233
+  Number of valid reads: 24530666
+  Number of correct strand reads:0
+  
+  Inside of regions...
+  Num mapped reads: 24530666
+  Num mapped first of pair: 12269808
+  Num mapped second of pair: 12260858
+  Num singletons: 74737
+  Time taken to analyze reads: 446
+  Computing descriptors...
+  numberOfMappedBases: 1587144672
+  referenceSize: 5227419
+  numberOfSequencedBases: 1587004564
+  numberOfAs: 523636574
+  Computing per chromosome statistics...
+  Computing histograms...
+  Overall analysis time: 451
+  end of bam qc
+  Computing report...
+  Writing HTML report...
+  HTML report created successfully
+  
+  Finished
+
+Command error:
+  OpenJDK 64-Bit Server VM warning: Ignoring option MaxPermSize; support was removed in 8.0
+
+Work dir:
+  /Users/tristanpwdennis/Projects/bactocap/work/e2/2f0b00abddd0f1f1c27237f5dfde70
+
+Tip: when you have fixed the problem you can continue the execution adding the option `-resume` to the run command line
+Jul-29 12:45:16.170 [Task monitor] DEBUG nextflow.Session - Session aborted -- Cause: Missing output file(s) `AN17-27-A-S_S6` expected by process `Qualimap (AN17-27-A-S_S6)`
+Jul-29 12:45:16.171 [main] DEBUG nextflow.Session - Session await > all process finished
+Jul-29 12:45:16.226 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Jul-29 12:45:16.264 [main] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=2; failedCount=1; ignoredCount=0; cachedCount=7; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=38.7s; failedDuration=7m 36s; cachedDuration=1h 25m 26s;loadCpus=0; loadMemory=0; peakRunning=2; peakCpus=2; peakMemory=4 GB; ]
+Jul-29 12:45:16.513 [main] DEBUG nextflow.CacheDB - Closing CacheDB done
+Jul-29 12:45:16.555 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye
