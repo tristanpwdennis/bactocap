@@ -3,10 +3,36 @@ library(viridis)
 library(tidyverse)
 library(GGally)
 library(reticulate)
-#get metadata for mycoplasma and anthrax
-mycodata <- read.csv("/Users/tristanpwdennis/Projects/bactocap-data/mycoplasma/metadata/myco-seq-sample-data.csv", na.strings = c("", "NA"))
-anthdata <- read.csv("/Users/tristanpwdennis/Projects/bactocap-data/anthrax/metadata/anthrax-metadata-1.csv",na.strings = c("", "NA"))
 
+
+
+#get metadata for mycoplasma and anthrax
+mycodata <- read.csv("/Users/tristanpwdennis/Projects/bactocap/datasets/mycoplasma/myco-seq-sample-data.csv", na.strings = c("", "NA"))
+anthdata <- read.csv("/Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/anthrax-metadata-ud1.csv",na.strings = c("", "NA"))
+
+
+#create column with letter of each sample type that will form the sample name
+anthdata <- anthdata %>% mutate(.,
+              letter = case_when(
+                sample_type == 'swab' ~ 'S',
+                sample_type == 'tissue' ~ 'T',
+                sample_type == 'tissue ' ~ 'T',
+                sample_type == 'blood' ~ 'B',
+                sample_type == 'insect' ~ 'I',
+                TRUE ~ NA_character_)) 
+#combine carcass id with sample type id to make stable id
+anthdata$sample_id <- paste(anthdata$carcass_id,anthdata$letter,sep="-")
+
+
+
+write_csv(anthdata, "/Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/anthrax-metadata-ud1.csv")
+
+
+
+
+
+
+mycodata %>% select(cap_lib_conc, init_lib_conc, reads, frac_duplicates, )
 
 
 
