@@ -1,6 +1,6 @@
 #gitignore for bactcap-nf repo
 #files that will not be tracked
-
+stash/*
 .DS_Store
 
 

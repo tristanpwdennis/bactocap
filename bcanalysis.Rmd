@@ -1,12 +1,15 @@
 ---
 title: "Bactocap Analysis"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 ```{r rsetup, warning = FALSE, echo = FALSE, message = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(rstudioapi)
 library(reticulate)
 library(tidyverse)
+library(GGally)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```
 ```{python pysetup, warning = FALSE, echo = FALSE, message = FALSE}
@@ -17,9 +20,9 @@ import itertools as it
 
 This MD incorporates the various analyses I've done for the Bactocap project in one place. We are trying to assess the outcome of a targeted sequence capture method described in ***this manuscript***. In order to do that, I am measuring 'success' of capture in a number of ways, including: the total number of baits captured and sequenced to a give d.o.c, and then assessing the effect of various laboratory metrics on the proportion of baits captured to a given d.o.c. More below.
 
-A note on the programming. I really love R's tidyverse and plotting capabilities, but I prefer Python for scripting (and almost everything else). The problem was finding a way that I could unify the output of both without running two scripts in parallel that parsed the output of one another/some other hacky and horrible way. I found the `reticulate` library that allows interoperability and the sharing of states between R and Python code, which in turn has allowed me to combine my R and Python scripts into one .Rmd file. 
+A note on the programming. I really love R's tidyverse and plotting capabilities, but I prefer Python for scripting (and almost everything else). I found the `reticulate` library that allows interoperability and the sharing of states between R and Python code, which in turn has allowed me to combine my R and Python scripts into one .Rmd file. 
 
-I'm not sure whether it's horrible or not:
+I'm not sure whether the result is a monster or not:
 
 ![](ancillary/misc/could-should.jpg)
 
@@ -29,9 +32,13 @@ I probably could have just written this whole thing in one or the other, but whe
 ```{python getdata, include = FALSE}
 andata = pd.read_csv("/Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/results/0to400covstats.txt", sep=' ', names=["num_baits", "sample", "depth"]) 
 mydata = pd.read_csv("/Users/tristanpwdennis/Projects/bactocap/datasets/mycoplasma/covstatstotal.txt", sep=' ', names=["num_baits", "sample", "depth"])
-mymeta = pd.read_csv("/Users/tristanpwdennis/Projects/bactocap-data/mycoplasma/metadata/myco-seq-sample-data.csv")
-anmeta = pd.read_csv("/Users/tristanpwdennis/Projects/bactocap-data/anthrax/metadata/anthrax-metadata-1.csv")
+mymeta = pd.read_csv("/Users/tristanpwdennis/Projects/bactocap/datasets/mycoplasma/myco-seq-sample-data.csv")
+anmeta = pd.read_csv("/Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/anthrax-metadata-ud1.csv")
 ```
+
+
+
+
 **Part 1: Calculating the per-sample fraction of the baitset covered to a minimum d.o.c**
 
 The minimum coverage over each bait over a range of d.o.c (0-400 in increments of 5) was calculated per-sample using the script below (won't run at the moment)
@@ -104,7 +111,20 @@ py$size_df %>%
   facet_wrap(~frac) +
   theme_minimal()
 ```
+```{r plotstats, echo = FALSE}
+#add organism columns to metadata
+py$anmeta$organism <- paste0("anthrax")
+py$mymeta$organism <- paste0("mycoplasma")
 
+py$anmeta$frac_mapped = py$an$meta$mapped/py$an$meta$reads
+py$mymeta$frac_mapped = py$my$meta$mapped/py$my$meta$reads
+
+py$anmeta %>% select(cap_lib_conc, init_lib_conc, reads,frac_mapped, frac_duplicates, max_ct) %>% ggpairs()
+py$mymeta %>% select(cap_lib_conc, init_lib_conc, reads,frac_mapped, frac_duplicates, max_ct) %>% ggpairs()
+
+
+
+```
 
 
 
