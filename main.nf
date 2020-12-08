@@ -397,7 +397,7 @@ process GenomicsDBImport {
 
   gatk GenomicsDBImport \
   --genomicsdb-workspace-path genomics_db \
-  -L NC_007530_Bacillus_anthracis_Ames_Ancestor \
+  -L MAM-A39 \
     ${gvcf.collect { "-V $it " }.join()} \
   --reader-threads 3 
 

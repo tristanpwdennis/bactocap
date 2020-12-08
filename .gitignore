@@ -1,6 +1,15 @@
 #gitignore for bactcap-nf repo
 #files that will not be tracked
-
+.nextflow.*
+.nextflow/history
+/datasets/mlst/raw_reads/*
+/datasets/mlst/results/*
+/work/*
+/datasets/mycoplasma/raw_reads/*
+/datasets/mycoplasma/results/*
+/datasets/anthrax/raw_reads/*
+/datasets/anthrax/results/*
+./nextflow/*
 .DS_Store
 
 
