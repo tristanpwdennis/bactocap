@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import itertools as it
-import plotnine as p9
 #import data
 # turn this into a loop or function sometime
 andata = pd.read_csv("/Users/tristanpwdennis/Projects/bactocap/datasets/anthrax/results/0to400covstats.txt", sep=' ', names=["num_baits", "sample", "depth"]) 
@@ -42,36 +41,10 @@ size_df['organism'] = np.where(size_df['ninds']==113, 'anthrax', 'mycoplasma')
 #plot depth of coverage to which an increasing fraction of baits are totally covered in both
 #sample sets
 
-
-
 size_df['frac'] = size_df['frac']*100
 
 
-(
- p9.ggplot(size_df, p9.aes(x = 'coverage', y = 'frac_inds', colour = 'organism'))+
-  p9.geom_line() +
-  p9.facet_wrap('frac') +
-  p9.xlab("Depth of Coverage") +
-  p9.ylab("Fraction of Sample Set") +
-  p9.theme_bw()
- )
+size_df.to_csv('~/Projects/bactocap/')
 
 
-
-
-
-
-
-#plot fraction of baits covered to x depth in all individuals for both anth and myco
-(
- p9.ggplot(df, p9.aes(x='depth', y ='frac', colour = 'sample')) +
-     p9.geom_line() +
-     p9.facet_wrap('organism') +
-     p9.scale_color_discrete(guide=False) +
-     p9.xlab("Depth of Coverage") +
-     p9.ylab("Fraction of Baits Captured") +
-     p9.theme_bw() 
- )
-
-df[(df.frac > 0.75) & (df.depth > 300)]
-df[(df['sample'] == 'AN17-187_S19')]
+pd.read_csv('~/'
