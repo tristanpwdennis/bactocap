@@ -48,6 +48,7 @@ if (params.dataset == "anthrax") {
 }
 
 params.reads = "${dirpath}/raw_reads/*{R1_001,R2_001}.fastq.gz"
+params.annotation = "${dirpath}/ancillary/*.bed"
 params.fasta = "${dirpath}/ref/*.fasta"
 params.dict = "${dirpath}/ref/*.dict"
 params.fai = "${dirpath}/ref/*.fasta.fai"
@@ -70,11 +71,17 @@ Channel
     .ifEmpty { error "Cannot find any reads matching: ${params.reads}" }
     .set { read_pairs_ch } 
 }
+if (params.annotation) {
+Channel
+    .fromPath( params.annotation)
+    .ifEmpty { error "Cannot find any annotation matching: ${params.annotation}" }
+    .set { bed } 
+}
 if (params.fasta) {
 Channel
     .fromPath( params.fasta )
     .ifEmpty { error "Cannot find any FASTA file matching: ${params.fasta}" }
-    .into { fasta1; fasta2; fasta3; fasta4 } 
+    .into { fasta1; fasta2; fasta3; fasta4; fasta5 } 
 }
 if (params.dict) {
 Channel
@@ -229,7 +236,7 @@ process AddOrReplaceReadGroups {
   tuple val(pair_id), file(bam_file) from dupmarked_ch
 
   output:
-  tuple val(pair_id), file("${pair_id}.rg.bam"), file("${pair_id}.rg.bai") into rg_bam, bamqc1, bamqc2
+  tuple val(pair_id), file("${pair_id}.rg.bam"), file("${pair_id}.rg.bai") into rg_bam, bamqc1, bamqc2, bamqc3
 
   script:
   """
@@ -317,6 +324,31 @@ process MultiQC {
   export LANG=C.UTF-8
 
   multiqc .
+  """  
+}
+
+annochannel = bamqc3.combine(bed)
+process CollectDoC {
+  tag "Performing multiqc on fastqc output"
+  publishDir "$params.results"
+  input:
+  tuple val(pair_id), file(bam), file(bai), file(bed) from annochannel
+
+  output:
+  file ("${pair_id}.sample_cumulative_coverage_counts") 
+  file ("${pair_id}.sample_cumulative_coverage_proportions")
+  file ("${pair_id}.sample_interval_statistics")
+  file ("${pair_id}.sample_interval_summary")
+  file ("${pair_id}.sample_statistics")
+  file ("${pair_id}.sample_summary")
+
+  script:
+  """
+gatk DepthOfCoverage \
+-R ${fasta5} \
+-O ${pair_id} \
+-I ${pair_id}.rg.bam \
+-L ${bed}
   """  
 }
 
