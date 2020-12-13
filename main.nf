@@ -257,7 +257,7 @@ bits = bed.merge(fasta5, fai4, dict4)
 docchannel = bamqc3.combine(bits)
 
 process CollectDoC {
-  tag "Performing multiqc on fastqc output"
+  tag "Collecting coverage stats from ${pair_id}"
   publishDir "$params.results"
   input:
   tuple val(pair_id), file("${pair_id}.rg.bam"), file("${pair_id}.rg.bai"), file(bed), file(fasta5), file(fai4), file(dict4) from docchannel
@@ -277,6 +277,44 @@ gatk DepthOfCoverage \
 -I ${pair_id}.rg.bam \
 -L ${bed}
   """  
+}
+
+process FlagstatRun {
+  tag "Collecting read metadata from ${pair_id}"
+  publishDir "$baseDir/results/individual_reports"
+
+  input:
+  tuple val(pair_id), file(bam), file(bai) from bamqc2
+
+  output:
+  file ("${pair_id}.stats.txt") into flagstat_results
+  file ("${pair_id}.stats.txt") into flagstat_collect
+
+
+  script:
+  """
+  samtools flagstat ${pair_id}.rg.bam > ${pair_id}.stats.txt
+  """
+}
+
+process FlagstatCollect  {
+  publishDir "$baseDir/results/"
+  input:
+  file(flagfile) from flagstat_collect.toList()
+
+
+  output:
+  file("mapping_stats.csv") into flagtextfile_ch
+  script:
+  """
+  printf sample_id,total,secondary,supplementary,duplicates,mapped,paired,read1,read2,properly_paired,with_itself_and_mate_mapped,singletons,mate_on_diff_chr,mate_on_diff_chrover5,"\n" > mapping_stats.csv
+
+  for f in *txt
+  do
+   flag=`< \$f cut -d \\+ -f 1 | tr -s '[:blank:]' ','`
+   echo "\${f%.stats.txt}",\$flag | tr -d ' ' >> mapping_stats.csv
+  done
+  """
 }
 
 //here we choose whether to follow the mlst or the anthrax/mycoplasma workflow
