@@ -87,13 +87,13 @@ if (params.dict) {
 Channel
     .fromPath( params.dict )
     .ifEmpty { error "Cannot find any GATK sequence dictionary matching: ${params.dict}" }
-    .into { dict1; dict2; dict3 } 
+    .into { dict1; dict2; dict3; dict4} 
 }
 if (params.fai) {
 Channel
     .fromPath( params.fai )
     .ifEmpty { error "Cannot find any samtools .fai index matching: ${params.fai}" }
-    .into { fai1; fai2; fai3 } 
+    .into { fai1; fai2; fai3; fai4} 
 }
 if (params.bwt) {
 Channel
@@ -252,88 +252,15 @@ process AddOrReplaceReadGroups {
   """
 }
 
-process Qualimap {
-  tag "${pair_id}"
-  publishDir "$params.results/${pair_id}"
-  memory threadmem_more
 
-  input:
-  tuple val(pair_id), file(bam), file(bai) from bamqc1
+bits = bed.merge(fasta5, fai4, dict4)
+docchannel = bamqc3.combine(bits)
 
-  output:
-  file ("${pair_id}") into qualimap_results
-
-  script:
-  """
-  qualimap bamqc -bam ${pair_id}.rg.bam -outdir ${pair_id}
-  """
-}
-
-process FlagstatRun {
-  tag "${pair_id}"
-  publishDir "$baseDir/results/individual_reports"
-
-  input:
-  tuple val(pair_id), file(bam), file(bai) from bamqc2
-
-  output:
-  file ("${pair_id}.stats.txt") into flagstat_results
-  file ("${pair_id}.stats.txt") into flagstat_collect
-
-
-  script:
-  """
-  samtools flagstat ${pair_id}.rg.bam > ${pair_id}.stats.txt
-  """
-}
-
-process FlagstatCollect  {
-  publishDir "$baseDir/results/"
-  input: 
-  file(flagfile) from flagstat_collect.toList()
-
-
-  output: 
-  file("mapping_stats.csv") into flagtextfile_ch
-  script:
-  """
-  printf sample_id,total,secondary,supplementary,duplicates,mapped,paired,read1,read2,properly_paired,with_itself_and_mate_mapped,singletons,mate_on_diff_chr,mate_on_diff_chrover5,"\n" > mapping_stats.csv
-
-  for f in *txt
-  do 
-   flag=`< \$f cut -d \\+ -f 1 | tr -s '[:blank:]' ','` 
-   echo "\${f%.stats.txt}",\$flag | tr -d ' ' >> mapping_stats.csv
-  done
-  """
-}
-
-process MultiQC {
-  tag "Performing multiqc on fastqc output"
-  publishDir "$params.results"
-  input:
-  file('*')  from fastqc_ch.collect()
-  file('*') from qualimap_results.collect()
-  file('*')from flagstat_results.collect()
-
-  output:
-  file('multiqc_report.html')
-
-  script:
-  """
-  export LC_ALL=C.UTF-8
-  export LANG=C.UTF-8
-
-  multiqc .
-  """  
-}
-
-annochannel = bamqc3.combine(bed)
 process CollectDoC {
   tag "Performing multiqc on fastqc output"
   publishDir "$params.results"
   input:
-  tuple val(pair_id), file(bam), file(bai), file(bed) from annochannel
-
+  tuple val(pair_id), file("${pair_id}.rg.bam"), file("${pair_id}.rg.bai"), file(bed), file(fasta5), file(fai4), file(dict4) from docchannel
   output:
   file ("${pair_id}.sample_cumulative_coverage_counts") 
   file ("${pair_id}.sample_cumulative_coverage_proportions")
@@ -342,8 +269,8 @@ process CollectDoC {
   file ("${pair_id}.sample_statistics")
   file ("${pair_id}.sample_summary")
 
-  script:
-  """
+script:
+ """
 gatk DepthOfCoverage \
 -R ${fasta5} \
 -O ${pair_id} \
