@@ -153,21 +153,6 @@ process ReadTrimming {
 
 }
 
-process FastQC {
-  tag "Performing fastqc on ${pair_id}"
-  input:
-  tuple val(pair_id), file(read1), file(read2) from readsforqc
-  output:
-  file("fastqc_${pair_id}_logs") into fastqc_ch
-
-  script:
-    """
-    mkdir fastqc_${pair_id}_logs
-
-    fastqc -o fastqc_${pair_id}_logs -f fastq -q $read1 $read2
-    """  
-}
-
 bwa_index = ann.merge(bwt, pac, sa, amb, fasta1)
 ref1 = trimmed_reads.combine(bwa_index)
 
@@ -204,7 +189,7 @@ process bwaSort{
   script:
 
   """
-  gatk SortSam -I $sam -O ${pair_id}.srt.bam -SO coordinate
+ samtools view -bS $sam | samtools sort - -o ${pair_id}.srt.bam
   """
 
 }
@@ -231,7 +216,7 @@ process MarkDuplicates {
 //add read groups
 process AddOrReplaceReadGroups {
   tag "Adding read groups to: ${pair_id}"
-  publishDir "$params.results/${pair_id}"
+  publishDir "$params.results/${pair_id}", mode: 'copy'
   input:
   tuple val(pair_id), file(bam_file) from dupmarked_ch
 
@@ -317,110 +302,3 @@ process FlagstatCollect  {
   """
 }
 
-//here we choose whether to follow the mlst or the anthrax/mycoplasma workflow
-// if the dataset argument follows mlst then we follow the mlst processes detailed below
-if (params.mappingonly) {
-
-//mlst processes follow
-process PlaceholderProcess {
-  tag "This is a placeholder until I decide on a final mlst process"
-  script:
-  """
-  echo "MLST processes"
-  """
-}
-
-
-//if a non-mlst option is chosen (e.g. anthrax or mycoplasma), then we follow the alternate workflow pattern
-//the closing brace is after the last process
-} else {
-
-//merge reference and bam data into one channel
-gatk_dict = fasta2.merge(dict1, fai1)
-haplotypecaller = rg_bam.combine(gatk_dict)
-
-process HaplotypeCaller {
-  tag "Calling variants for: ${pair_id}"
-  publishDir "$params.results/${pair_id}"
-  input:
-
-  tuple val(pair_id), file(bam), file(bai), file(fasta2), file(dict1), file(fai1) from haplotypecaller
-
-  output:
-  val(pair_id) into pair_id
-  file "${pair_id}.g.vcf" into gvcf_channel
-  file "${pair_id}.g.vcf.idx" into gvcf_index
-
-  script:
-   """
-   gatk HaplotypeCaller \
-    -R $fasta2 \
-    -O ${pair_id}.g.vcf \
-    -I $bam \
-    -ERC GVCF \
-    -isr INTERSECTION \
-    --native-pair-hmm-threads 1 \
-    --max-alternate-alleles 3 \
-    -contamination 0 \
-    --QUIET
-    """
-}
-
-//collect fasta, dict and fai data into a channel
-dbdict = fasta3.merge(dict2, fai2)
-
-
-process GenomicsDBImport {
-  tag "Collecting gvcf into genomicsDB"
-  input:
-  file(gvcf) from gvcf_channel.collect()
-  file(gvcf_idx) from gvcf_index.collect()
-  val(pair_id) from pair_id.collect()
-  tuple file(fasta3), file(dict2), file(fai2) from dbdict
-
-  output: path("input_variant_files.list") into listch
-          file("genomics_db") into genodb_ch
-
-  script:
-"""
-  #make list of vcf files for import to genomicsdb
-
-  for vcf in \$(ls *.vcf); do
-    echo \$vcf >> input_variant_files.list
-  done
-
-  sed 's/.vcf//g' input_variant_files.list | awk '{print\$0"\t"\$0".vcf"}' > vcflist.list
-
-
-  gatk GenomicsDBImport \
-  --genomicsdb-workspace-path genomics_db \
-  -L MAM-A39 \
-    ${gvcf.collect { "-V $it " }.join()} \
-  --reader-threads 3 
-
-"""
-}
-
-genodict = fasta4.merge(dict3, fai3)
-
-process GenotypeGVCF {
-  tag "Generating final vcf from gvcfs and genomicdb"
-  publishDir "$baseDir/results/"
-  input:
-  tuple file(fasta4), file(dict3), file(fai3) from genodict
-  file(genomics_db) from genodb_ch
-
-  output:
-  file("final_anthrax.vcf") into finalvcf_ch
-
-  script:
-  """
-  gatk GenotypeGVCFs \
-  -R ${fasta4} \
-  -V gendb://genomics_db \
-  -O final_anthrax.vcf
-  """
-}
-
-//closing brace for non mlst process block
-}
