@@ -243,7 +243,7 @@ docchannel = bamqc3.combine(bits)
 
 process CollectDoC {
   tag "Collecting coverage stats from ${pair_id}"
-  publishDir "$params.results"
+  publishDir "$params.results/${pair_id}"
   input:
   tuple val(pair_id), file("${pair_id}.rg.bam"), file("${pair_id}.rg.bai"), file(bed), file(fasta5), file(fai4), file(dict4) from docchannel
   output:
@@ -283,7 +283,7 @@ process FlagstatRun {
 }
 
 process FlagstatCollect  {
-  publishDir "$baseDir/results/"
+  publishDir "$params.results/${pair_id}"
   input:
   file(flagfile) from flagstat_collect.toList()
 
