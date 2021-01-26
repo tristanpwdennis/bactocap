@@ -10,21 +10,67 @@ mlstmapping <- read_csv('~/Projects/bactocap/ancillary/metadata/mlst-mapping.csv
 #func to read csvs and take filename as a column
 read_plus <- function(flnm) {
   read_csv(flnm) %>% 
-    mutate(filename = basename(flnm))
+  mutate(filename = basename(flnm))
 }
 
-dirs <- c("~/Projects/bactocap/datasets/mlst/results/")
+
+t<-
+t<-mutate(t, filename = "fenton")
+names(t)=NULL
+
+
+
+dir <- c("~/Projects/bactocap/datasets/mlst/results/")
 new_tbl <- NULL 
-for (dir in dirs){
-  tbl <- list.files(path = dir,pattern = ".sample_interval_statistics", full.names = T) %>% 
-    map_df(~read_plus(.)) 
-  tbl$organism = paste0(dir)
-  new_tbl <- rbind(new_tbl, tbl)
+files <- list.files(path = dir,pattern = ".sample_interval_summary", full.names = T)
+for (file in files) {
+  the_data <- read_csv(file)
+  the_data<-the_data %>% mutate(filename = file)
+  the_data <- the_data %>% select(1,2,3,9,10)
+  colnames(the_data) <- c("target", "total", "average", "percent_above_15","filename")
+  new_tbl<-rbind(new_tbl,the_data)
 }
 
-#replace gatk's gubbins from the header
-colnames(new_tbl) <- str_replace(colnames(new_tbl), "depth>=", "")
-#remove useless column (Number of Sources)
+#clean out the filename
+new_tbl$filename <- str_replace(new_tbl$filename, "/Users/tristanpwdennis/Projects/bactocap/datasets/mlst/results//", "")
+new_tbl$filename <- str_replace(new_tbl$filename, ".sample_interval_summary", "")
+
+#separate the target column into organism, locus, type etc
+ 
+new_tbl$target<-sub(":", "_", new_tbl$target)
+new_tbl$target<-sub("_[^_]+$", "", new_tbl$target)
+new_tbl$targetname <- new_tbl$target
+new_tbl <- new_tbl %>% extract(target, into = c("target", "target_organism"), "(.*)_([^_]+)$") 
+new_tbl <- new_tbl %>% extract(target, into = c("locus", "locus_type"), "(.*)_([^_]+)$")
+#remove polyomics suffix
+new_tbl$filename <- sub("_[^_]+$", "", new_tbl$filename)
+
+
+#select sample composition from metadata and join to new_tbl
+ud_tbl <- metadata %>% select(IDInBactocap, sample_composition) %>% left_join(., new_tbl, by = c("IDInBactocap" = "filename"))
+
+target_annotations <- data.frame()
+
+target_annotations <- ud_tbl %>% select(targetname, target_organism)
+sample_annotations <- ud_tbl %>% select(IDInBactocap, sample_composition)
+heatmapdata <- ud_tbl %>% select(targetname, IDInBactocap, percent_above_15, target_organism)
+heatmapdata <- heatmapdata %>% pivot_wider(names_from=IDInBactocap, values_from = percent_above_15)
+heatmapdata <- heatmapdata %>% arrange(., target_organism)
+heatmapdata <- heatmapdata %>% remove_rownames %>% column_to_rownames(var="targetname")
+heatmapdata <- heatmapdata %>% select(-target_organism)
+sample_annotations<- sample_annotations %>% distinct() %>% remove_rownames %>% column_to_rownames(var="IDInBactocap")
+target_annotations <- target_annotations %>% distinct() %>% remove_rownames %>% column_to_rownames(var="targetname")
+pheatmap::pheatmap(heatmapdata,cluster_rows=FALSE, cluster_cols=FALSE, annotation_col = sample_annotations, annotation_row = target_annotations)
+
+heatmapdata
+
+
+
+
+annotation <- data.frame(Var1 = factor(1:10 %% 2 == 0, labels = c("Exp1", "Exp2")))
+
+?pheatmap::pheatmap
+
 new_tbl <- new_tbl %>% select(-Number_of_sources)
 new_tbl$organism
 
@@ -40,6 +86,11 @@ targstats <- targstats %>% count(species) %>% rename(num_targs_for_species = n) 
 new_tbl$sample_id <- gsub("\\_.*","",new_tbl$filename)
 s<- metadata %>% select(IDInBactocap, sample_composition)  %>% left_join(new_tbl, by = c("IDInBactocap" = "sample_id"))
 new_tbl <- s %>% pivot_longer(cols = c(3:503))
+
+
+new_tbl
+
+
 
 
 covplot <- new_tbl %>% ggplot(aes(x=name, y=frac, colour = filename)) +
