@@ -122,3 +122,5 @@
 2020-07-29 12:58:08	7m 41s	special_ramanujan	ERR	cafdb0966d486430b76845cdd2ac6f5b	638b041f-8a2a-4434-9d6d-9518941bde13	nextflow run main.nf --dataset anthrax --mappingonly -resume
 2020-07-29 13:18:59	7m 54s	ridiculous_chandrasekhar	ERR	eb2144a8466feec2a40c279ba1489fa9	638b041f-8a2a-4434-9d6d-9518941bde13	nextflow run main.nf --dataset anthrax --mappingonly -resume
 2020-07-29 13:30:00	7m 59s	marvelous_church	OK	5801ca0299f3874f260d86a649003e3f	638b041f-8a2a-4434-9d6d-9518941bde13	nextflow run main.nf --dataset anthrax --mappingonly -resume
+2020-12-08 15:25:05	1.5s	kickass_albattani	ERR	2788436433fec8fa23674c04b9f6a516	8703272b-4f4a-4f07-8fd7-40ef47682b19	nextflow run main.nf --dataset mlst --mappingonly
+2020-12-08 15:25:45	1m 32s	sick_elion	ERR	2788436433fec8fa23674c04b9f6a516	1b75a012-7c87-4803-abdf-ad4355d43e29	nextflow run main.nf --dataset mlst --mappingonly

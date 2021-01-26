@@ -22,8 +22,8 @@ ddlA_MLST_Brucella	553
 dnaK_MLST_Brucella	470
 fbaA_1_MLST_Brucella	458
 flaA_MLST_Bartonella	517
-ftsZ_B_1_MLST_Bartonella	497
-ftsZ_H_1_MLST_Bartonella	483
+ftsZB1_MLST_Bartonella	497
+ftsZH1_MLST_Bartonella	483
 fumC_MLST_Brucella	452
 gap_MLST_Brucella	589
 glk_MLST_Brucella	475
@@ -32,7 +32,7 @@ gltA_MLST_Bartonella	338
 groEL_MLST_Bartonella	442
 gyrB_MLST_Brucella	469
 icdA_MLST_Lepto	557
-int_hyp_1_MLST_Brucella	430
+inthyp1_MLST_Brucella	430
 leuA_MLST_Brucella	482
 lipL32_MLST_Lepto	450
 lipL41_MLST_Lepto	493
@@ -51,4 +51,3 @@ rpoB_MLST_Bartonella	363
 soxA_1_MLST_Brucella	486
 sucA_MLST_Lepto	447
 trpE_MLST_Brucella	486
-	

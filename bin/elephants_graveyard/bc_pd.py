@@ -13,16 +13,16 @@ import glob
 import os
 
 org = "mycoplasma"
-top = "/home/ubuntu/onchogenome/bactocap/datasets/"
+top = "/Users/tristanpwdennis/Projects/bactocap/datasets/"
 sub = "/results/*/*.bam"
 
 path = top + org + sub
 bams= glob.glob(path)
 
 if(org == "mycoplasma"):
-    bed = pybedtools.BedTool('/home/ubuntu/onchogenome/bactocap/ancillary/annotation/aln.Myco.4columns.bed')
+    bed = pybedtools.BedTool('/Users/tristanpwdennis/Projects/bactocap/ancillary/annotation/aln.Myco.4columns.bed')
 elif(org == "anthrax"):
-    bed = pybedtools.BedTool('/home/ubuntu/onchogenome/bactocap/ancillary/annotation/aln_BaBaits.4columns.bed')
+    bed = pybedtools.BedTool('/Users/tristanpwdennis/Projects/bactocap/ancillary/annotation/aln_BaBaits.4columns.bed')
   
     #extract per-position coverage using the bait bed file (wraps bedtools)
 def getcovdata(bams, bed):
@@ -49,5 +49,5 @@ for cov in np.arange(0,200,5):
 
 #concat to big df
 t = pd.concat(v)
-#export csv
-t.DataFrame.to_csv('/home/ubuntu/onchogenome/bactocap/covdf.csv')
+#export big csv
+t.to_csv('/Users/tristanpwdennis/Projects/bactocap/covdf.csv')

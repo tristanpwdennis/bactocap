@@ -3,12 +3,57 @@ library(RColorBrewer)
 library(ggridges)
 
 setwd('~/Projects/bactocap/datasets/mlst/')
-mapstats <- read_delim('idxstats.txt', delim = '\t')
-targstats <- read_delim('targstats.txt', delim = '\t')
-metadata <- read_delim('mlst_metadata.tsv', delim = '\t')
+mapstats <- read_delim('~/Projects/bactocap/ancillary/metadata/idxstats.txt', delim = '\t')
+targstats <- read_delim('~/Projects/bactocap/ancillary/metadata/targstats.txt', delim = '\t')
+metadata <- read_delim('~/Projects/bactocap/ancillary/metadata/mlst_metadata.tsv', delim = '\t')
+mlstmapping <- read_csv('~/Projects/bactocap/ancillary/metadata/mlst-mapping.csv')
+#func to read csvs and take filename as a column
+read_plus <- function(flnm) {
+  read_csv(flnm) %>% 
+    mutate(filename = basename(flnm))
+}
+
+dirs <- c("~/Projects/bactocap/datasets/mlst/results/")
+new_tbl <- NULL 
+for (dir in dirs){
+  tbl <- list.files(path = dir,pattern = ".sample_interval_statistics", full.names = T) %>% 
+    map_df(~read_plus(.)) 
+  tbl$organism = paste0(dir)
+  new_tbl <- rbind(new_tbl, tbl)
+}
+
+#replace gatk's gubbins from the header
+colnames(new_tbl) <- str_replace(colnames(new_tbl), "depth>=", "")
+#remove useless column (Number of Sources)
+new_tbl <- new_tbl %>% select(-Number_of_sources)
+new_tbl$organism
+
+new_tbl$filename <- str_replace(new_tbl$filename, ".sample_interval_statistics", "")
+new_tbl$organism <- str_replace(new_tbl$organism, "~/Projects/bactocap/datasets/", "")
+new_tbl$organism <- str_replace(new_tbl$organism, "/results/", "")
+
+targstats <- targstats %>% separate(locus_name, c("locus","type", "species" )) %>% select(-type) %>% merge(., targstats)
+targstats <- targstats %>% count(species) %>% rename(num_targs_for_species = n) %>% left_join(., targstats)
+
 
 #remove garbage from end of sample name
+new_tbl$sample_id <- gsub("\\_.*","",new_tbl$filename)
+s<- metadata %>% select(IDInBactocap, sample_composition)  %>% left_join(new_tbl, by = c("IDInBactocap" = "sample_id"))
+new_tbl <- s %>% pivot_longer(cols = c(3:503))
+
+
+covplot <- new_tbl %>% ggplot(aes(x=name, y=frac, colour = filename)) +
+  geom_line()+
+  theme_minimal() +
+  facet_wrap(~organism) +
+  theme(legend.position = "none") +
+  xlab("Depth of coverage >=") +
+  ylab('Per-sample fraction of baits')
+
+
+
 mapstats$sample_id <- gsub("\\_.*","",mapstats$sample_id)
+
 #join mapping stats to metadata
 #inflates the metadata to contain one entry w/metadata per-target per-sample
 dfa <- metadata %>% left_join(mapstats, by = (c('IDInBactocap' = 'sample_id')))
@@ -74,6 +119,10 @@ for (num in x) {
   outputdf <- rbind(outputdf, s)
 }
 
+
+
+
+
 #calculate mapped targets as a fraction of the total
 outputdf$frac_targs = outputdf$n/outputdf$num_targs
 
@@ -81,9 +130,12 @@ outputdf$frac_targs = outputdf$n/outputdf$num_targs
 frac_mapped<- outputdf %>% 
   ggplot(aes(x=doc, y=frac_targs, fill=IDInBactocap, colour=sample_composition)) +
   geom_line()+
-  theme_minimal() +
-  theme(legend.position = "none") 
+  theme_minimal()+
+  xlim(0,2000) +
+  labs(x="Mean Depth-of-Coverage", y="Fraction of total Targets")
 
+
+frac_mapped
 
 
 frac_mapped_lim <- outputdf %>% 
@@ -95,7 +147,7 @@ frac_mapped_lim <- outputdf %>%
   theme(axis.title.y=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())
-
+frac_mapped_lim
 
 
 outputdf %>% filter(doc < 30 & frac_targs == 1)
@@ -124,7 +176,19 @@ single_double_boxplot <- dfd %>% filter(field_control == 'control') %>%
   scale_fill_manual(values = c("#577590", "#F94144")) +
   theme_minimal() +
   ylab("Proportion of Reads Mapped")
-single_double_boxplot
+
+#remove garbage
+t<-dfd %>% select(IDInBactocap, frac_mapped, sample_composition, Capture, `Host species`) %>% distinct()
+#models
+m0 <- MASS::glm.nb(data=t, frac_mapped ~Capture)
+m1 <- MASS::glm.nb(data=t, frac_mapped ~Capture*sample_composition)
+m2 <- MASS::glm.nb(data=t, frac_mapped ~Capture*`Host species`)
+summary(m0)
+summary(m1)
+summary(m2)
+#plot models
+interactions::cat_plot(m0, pred = Capture, interval = TRUE, plot.points = TRUE, line.thickness = 0.5)
+
 
 dilution <- dfd %>% filter(!(is.na(Dilution_factor))) %>% 
   group_by(`Sample type`, Dilution_factor, Diluant)%>% 
@@ -135,7 +199,7 @@ dilution <- dfd %>% filter(!(is.na(Dilution_factor))) %>%
   theme_minimal()+
   scale_fill_manual("legend", values = c("#F3722C", "#43AA8B"))+
   ylab("Proportion of Reads Mapped")
-dilution
+
 
 
 
@@ -270,7 +334,7 @@ dfc %>%
 #create cowplots
 
 #for proportion mapping based on single and double cap
-toprowcaptures <- plot_grid(single_double_line, single_double_boxplot, labels = c('C', 'D'))
+toprowcaptures <- plot_grid(single_double_line, single_double_boxplot)
 lab_plots <- plot_grid(proportion_mapped_control, dilution, toprowcaptures, labels = c('A', 'B', ''), label_size = 12, ncol = 1)
 lab_plots
 
@@ -286,3 +350,16 @@ bottomrow <- plot_grid(frac_mapped, frac_mapped_lim, align = 'h',labels = c('C',
 toprow <- plot_grid(frac_per_sample_map_boxplot,on_target_mapping_boxplot, align = 'h', labels = c('A', 'B'))
 
 plot_grid(toprow, bottomrow, align = 'v', ncol = 1)
+toprow
+
+toprow
+bottomrow <- plot_grid(frac_mapped, frac_mapped_lim, align = 'h',labels = c('A', 'B'))
+
+proportion_mapped_control
+single_double_boxplot
+frac_mapped
+bottomrow <- plot_grid(single_double_boxplot, frac_mapped, align = 'h')
+plot_grid(proportion_mapped_control, bottomrow, align = 'v', ncol = 1)
+
+
+
