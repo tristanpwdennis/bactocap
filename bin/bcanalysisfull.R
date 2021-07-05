@@ -1,13 +1,27 @@
-library(tidyverse)
-library(data.table)
-library(sjPlot)
-library(cowplot)
+
+
+#ls pkg
+pkg = c("tidyverse", "data.table", "sjPlot", "cowplot", "RColorBrewer", "cowplot", "DHARMa", "interactions", "jtools")
+#install.packages(pkg) #install packages if you need them and load
+new.packages <- pkg[!(pkg %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+lapply(pkg, require, character.only = TRUE)#
+
 
 #func to read csvs and take filename as a column
-read_plus <- function(flnm) {
+read_summarycov <- function(flnm) {
   read_csv(flnm) %>% 
     mutate(filename = basename(flnm))
 }
+
+read_intervalcov <- function(flnm) {
+  data.table::fread(flnm) %>% 
+    dplyr::select(9) %>% 
+    filter(. > 80) %>%
+    count() %>% 
+    mutate(filename = basename(flnm))
+}
+
 
 
 #################
@@ -19,113 +33,168 @@ mlst_dir <- c("~/Projects/bactocap/datasets/mlst/results/")
 
 dirs <- c(anthrax_dir, myco_dir)
 
-#read csvs from list of files
-
-new_tbl <- NULL 
-for (dir in dirs){
-tbl <- list.files(path = dir,pattern = ".sample_interval_statistics", full.names = T) %>% 
-  map_df(~read_plus(.)) 
-tbl$organism = paste0(dir)
-new_tbl <- rbind(new_tbl, tbl)
-}
-
-#replace gatk's gubbins from the header
-colnames(new_tbl) <- str_replace(colnames(new_tbl), "depth>=", "")
-#remove useless column (Number of Sources)
-new_tbl <- new_tbl %>% select(-Number_of_sources)
-new_tbl$organism
-
-new_tbl$filename <- str_replace(new_tbl$filename, ".sample_interval_statistics", "")
-new_tbl$organism <- str_replace(new_tbl$organism, "~/Projects/bactocap/datasets/", "")
-new_tbl$organism <- str_replace(new_tbl$organism, "/results/", "")
-
-
-#pivot into longer
-new_tbl <- new_tbl %>% pivot_longer(cols = c(0:501))
-new_tbl$frac <- fifelse(new_tbl$organism == 'mycoplasma', new_tbl$value/24444, new_tbl$value/148729)
-new_tbl$name <- as.numeric(new_tbl$name)
-new_tbl <- new_tbl %>% select(-filename, -organism)
-new_tbl$name <- as.numeric(new_tbl$name)
-new_tbl %>% ggplot(aes(x=name, y=value)) +
-  geom_line()+
-  theme_minimal() +
-  facet_wrap(~sample_composition) +
-  theme(legend.position = "none") 
-
-
 ##############################
 #persample summary data
 
 sum_tbl <- NULL 
 for (dir in dirs){
   tbl <- list.files(path = dir,pattern = ".sample_summary", full.names = T) %>% 
-    map_df(~read_plus(.)) %>% filter(sample_id != "Total")
+    map_df(~read_summarycov(.)) %>% filter(sample_id != "Total")
   tbl$organism = paste0(dir)
   sum_tbl <- rbind(sum_tbl, tbl)
 }
 
+interval_tbl <- NULL 
+for (dir in dirs){
+  tbl <- list.files(path = dir,pattern = ".sample_interval_statistics", full.names = T) %>% 
+    map_df(~read_summarycov(.)) 
+  tbl$organism = paste0(dir)
+  interval_tbl <- rbind(interval_tbl, tbl)
+}
+  
 
 sum_tbl$filename <- str_replace(sum_tbl$filename, ".sample_summary", "")
 sum_tbl$organism <- str_replace(sum_tbl$organism, "~/Projects/bactocap/datasets/", "")
 sum_tbl$organism <- str_replace(sum_tbl$organism, "/results/", "")
+sum_tbl$sample_id = gsub('(.*)_\\w+', '\\1', sum_tbl$sample_id)
 
-#plot mean_d_o_c
-sum_tbl %>% 
-  ggplot(aes(x = organism, y=mean, fill=organism)) +
-  geom_boxplot(width = 0.5) +
-  geom_jitter(width = 0.1) +
-  scale_fill_manual(values = c("#577590", "#F94144")) +
-  theme_minimal() +
-  ylab("Mean Depth-of-Coverage") +
-  ylab("Organism")
+interval_tbl$sample_id <- str_replace(interval_tbl$filename, ".sample_interval_statistics", "")
+interval_tbl$organism <- str_replace(interval_tbl$organism, "~/Projects/bactocap/datasets/", "")
+interval_tbl$organism <- str_replace(interval_tbl$organism, "/results/", "")
+interval_tbl$sample_id = gsub('(.*)_\\w+', '\\1', interval_tbl$sample_id)
 
-metadata <- rbind(read.csv("~/Projects/bactocap/metadata/anthrax-metadata.csv") %>% mutate(organism = 'anthrax'),
-read.csv("~/Projects/bactocap/metadata/mycoplasma-metadata.csv") %>% mutate(organism = 'mycoplasma'))
+interval_tbl = interval_tbl %>% mutate(baits_covered_overfifteen = case_when(
+  organism == 'anthrax' ~ `depth>=15`/148707,
+  organism == 'mycoplasma' ~ `depth>=15`/24415
+))
+
 
 mappingdata  <- rbind(read.csv("~/Projects/bactocap/datasets/mycoplasma/results/myco_mapping.csv") %>% mutate(organism = 'mycoplasma'), 
 read.csv("~/Projects/bactocap/datasets/anthrax/results/anth_mapping.csv") %>% mutate(organism = 'anthrax'))
+mappingdata$sample_id = gsub('(.*)_\\w+', '\\1', mappingdata$sample_id)
+
+anth_metadata = read.csv('~/Projects/bactocap/metadata/anthrax-metadata.csv') %>% dplyr::select(organism, sample_id, cap_lib_conc, init_lib_conc, max_ct, bc_amp_cycles)
+myco_metadata = read.csv('~/Projects/bactocap/metadata/myco-full-metadata.csv') %>% dplyr::select(organism, sample_id, cap_lib_conc, init_lib_conc, max_ct) %>% add_column(bc_amp_cycles = NA)
 
 
 
-total_tbl
 
-#################
+
+metadata = rbind(anth_metadata, myco_metadata)
+
+
+
+metadata = anth_metadata %>% 
+  dplyr::select(organism, sample_id, cap_lib_conc, init_lib_conc, max_ct, bc_amp_cycles) %>% bind_rows(myco_metadata %>% dplyr::select(organism, sample_id, cap_lib_conc, init_lib_conc, max_ct) %>% add_column(bc_amp_cycles = NA))
+
+
+
+
+
+metadata %>% group_by(organism) %>% count()
+mappingdata %>% group_by(organism) %>% count()
+
+#join interval to total cov tables
+covtable = interval_tbl %>% 
+  dplyr::select(sample_id, baits_covered_overfifteen) %>% 
+  left_join(sum_tbl %>% 
+              dplyr::select(-organism, -filename)) %>% 
+  rename(frac_genome_bases_over_15 = `%_bases_above_15`) 
+
+
+left_join(mappingdata, covtable)
+################
 #let's take a look at our metadata
-tb1 <- left_join(sum_tbl, metadata, by = c('sample_id'='polyom_id'))
-total_tbl <- left_join(tb1, mappingdata, by = c('sample_id'='sample_id'))
-total_tbl <- total_tbl %>% mutate(frac_mapped = mapped/total.y)
-total_tbl$sample_conc <- as.numeric(total_tbl$sample_conc)
-#################
-#frac  mapped vs ct value
-total_tbl %>% 
-  ggplot(aes(x=max_ct, y=frac_mapped, colour=organism)) +
-  geom_point()+
-  scale_colour_manual(values = c( "#F94144", "#577590")) +
-  #geom_smooth(method=lm) +
-  theme_minimal() +
-  labs(y='Fraction of Reads Mapped', x='Max. Ct Value')
-#################
-#total  mapped vs ct value
-total_tbl %>% 
-  ggplot(aes(x=max_ct, y=mapped, colour=organism)) +
-  geom_point()+
-  scale_colour_manual(values = c( "#F94144", "#577590")) +
-  #geom_smooth(method=lm) +
-  theme_minimal() +
-  labs(y='Reads Mapped', x='Max. Ct Value')
+total_tbl = left_join(mappingdata, covtable, by = c('sample_id' = 'sample_id'))
 
-#what kind of distribution are the data coming from...?
-total_tbl %>% ggplot(aes(x=frac_mapped, fill=organism)) +
-  geom_histogram(position = "dodge")+
-  theme_minimal()
-total_tbl %>% ggplot(aes(x=max_ct, fill=organism)) +
-  geom_histogram(binwidth = 1, position = "dodge")+
-  theme_minimal()
-total_tbl %>% ggplot(aes(x=cap_lib_conc, fill=organism)) +
-  geom_histogram(position = "dodge")+
-  theme_minimal()
+#check everything is ok (e.g. we have the req uired number of samples for anthrac (93) and myco (56))
+total_tbl %>%  group_by(organism) %>% count()
 
-#fit a model to frac_mapped  (binomial glm - if we consider frac mapped as ratio of successes to failures)
+#join to sample metadata
+s = left_join(metadata, total_tbl, by =c('sample_id' = 'sample_id'))
+
+s = s %>% mutate(amisuccessful= case_when(baits_covered_overfifteen > 0.8 ~ 'yes',
+                                         baits_covered_overfifteen < 0.8 ~ 'no'))
+
+s %>% group_by(organism.x, amisuccessful) %>% count()
+
+
+#wo
+write_csv(s, '~/Projects/bactocap/metadata/all_metadata.csv')
+
+
+#pl mean_d_o_c
+meandoc <- s %>% dplyr::select(organism.x, mean) %>% drop_na() %>% 
+  ggplot(aes(x = organism.x, y=mean, fill=organism.x)) +
+  geom_boxplot(width = 0.5, alpha = 0.7) +
+  geom_jitter(width = 0.1, alpha = 0.5) +
+  scale_fill_manual(values=c("deepskyblue1", "darkorange")) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  ylab("Mean Depth-of-Coverage") +
+  xlab("Organism")
+meandoc
+
+#genome bases above 15 - you go in a table
+baitsabovefifteen<- s %>% dplyr::select(organism.x, baits_covered_overfifteen) %>% drop_na() %>% 
+  ggplot(aes(x = organism.x, y=as.numeric(baits_covered_overfifteen), fill=organism.x)) +
+  geom_boxplot(width = 0.5, alpha = 0.7) +
+  geom_jitter(width = 0.1, alpha=0.5) +
+  scale_fill_manual(values=c("deepskyblue1", "darkorange")) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  ylab("Proportion Baits Covered Above 15X") +
+  xlab("Organism")
+baitsabovefifteen
+
+#genome bases above 15
+genomeabovefifteen<- s %>% dplyr::select(organism.x, frac_genome_bases_over_15) %>% drop_na() %>% 
+  ggplot(aes(x = organism.x, y= as.numeric(frac_genome_bases_over_15), fill=organism.x)) +
+  geom_boxplot(width = 0.5, alpha = 0.7) +
+  geom_jitter(width = 0.1, alpha=0.5) +
+  scale_fill_manual(values=c("deepskyblue1", "darkorange")) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  ylab("Proportion Genome Above 15X") +
+  xlab("Organism")
+genomeabovefifteen
+
+
+#duplicates
+duplicates <- s %>% dplyr::select(organism.x, duplicates, total.x) %>% drop_na() %>% 
+  ggplot(aes(x = organism.x, y=duplicates/total.x, fill=organism.x)) +
+  geom_boxplot(width = 0.5, alpha = 0.7) +
+  geom_jitter(width = 0.1, alpha=0.5) +
+  scale_fill_manual(values=c("deepskyblue1", "darkorange")) +
+  theme_minimal() +
+  ylim(0,0.3) +
+  theme(legend.position = "none") +
+  ylab("Proportion Duplicates") +
+  xlab("Organism")
+duplicates
+
+
+cowplot::plot_grid(duplicates, meandoc, genomeabovefifteen, NULL, labels = c("A", "B", "C"), ncol = 2)
+
+statstab = s %>%  
+  mutate(frac_duplicates = duplicates/total.x) %>% 
+  select(organism.x,frac_duplicates, frac_genome_bases_over_15, mean) %>% drop_na()
+
+statstab %>% group_by(organism.x) %>% summarise(
+  median_dups = median(as.numeric(frac_genome_bases_over_15)),
+  median
+)  
+  
+  
+
+
+#duplicates
+d0 <- MASS::glm.nb(data=s, duplicates ~ max_ct)
+d1 <- MASS::glm.nb(data=s, duplicates ~ organism.x*max_ct)
+summary(d1)
+summary(d0)
+
+#fit a model to frac_mapped  (Jess says this is basically logistic regression)
 m0 <- glm(data=total_tbl, frac_mapped ~ max_ct, family=binomial(link="logit"))
 m1 <- glm(data=total_tbl, frac_mapped ~ organism*max_ct, family=binomial(link="logit"))
 m2 <- glm(data=total_tbl, frac_mapped ~ organism+max_ct, family=binomial(link="logit"))
@@ -137,15 +206,14 @@ summary(m1)
 summary(m2)
 summary(m3)
 summary(m4)
-#which is lowest?
-min(m1$aic, m0$aic, m2$aic, m3$aic)
+summary(m5)
+
 #m1 fits best (organism*max_ct)
 
 #plot the data and model predictions
-interactions::interact_plot(m1, pred = max_ct, modx = 'organism', interval = TRUE, plot.points = TRUE, line.thickness = 0.5)
-interactions::interact_plot(m1, pred = cap_lib_conc, modx = 'organism', interval = TRUE, plot.points = TRUE, line.thickness = 0.5)
+fracmapped = interactions::interact_plot(m1, pred = max_ct, modx = 'organism', interval = TRUE, plot.points = TRUE, line.thickness = 0.5)
 #looks like the model is not fitting very well to the anthrax data (underestimating the lower ct and overestimating at the higher ct)
-
+fracmapped
 #let's try fitting to the raw mapped data
 #the frac mapped shouldn't matter as we are modelling organism as an interaction again
 #so it will consider mapped for each organism and whether the organisms are significantly different to one another
@@ -153,79 +221,130 @@ interactions::interact_plot(m1, pred = cap_lib_conc, modx = 'organism', interval
 m0 <- MASS::glm.nb(data=total_tbl, mapped ~ max_ct)
 m1 <- MASS::glm.nb(data=total_tbl, mapped ~ organism*max_ct)
 m2 <- MASS::glm.nb(data=total_tbl, mapped ~ organism+max_ct)
+m3 <- MASS::glm.nb(data=total_tbl, mapped ~ organism*cap_lib_conc)
+m4 <- MASS::glm.nb(data=total_tbl, mapped ~ organism*max_ct+cap_lib_conc)
+m5 <- MASS::glm.nb(data=total_tbl, mapped ~ organism*max_ct+cap_lib_conc+sample_conc)
 min(m1$aic, m0$aic, m2$aic)
 summary(m0)
 summary(m1)
 summary(m2)
+summary(m3)
+summary(m4)
+summary(m5)
 
-predict(m1)
+
+
+
+
+
+atable = total_tbl %>% filter(organism == 'anthrax')
+y0 <- MASS::glm.nb(data=atable, mapped ~ max_ct)
+y1 <- MASS::glm.nb(data=atable, mapped ~ max_ct + as.factor(bc_amp_cycles))
+summary(y1)
+plot(y1)
+
+
+atable = total_tbl %>% filter(organism == 'anthrax')
+f0 <- MASS::glm.nb(data=atable, duplicates ~ max_ct)
+f1 <- MASS::glm.nb(data=atable, duplicates ~ max_ct + as.factor(bc_amp_cycles))
+summary(f1)
+
+
+ggplot(atable, aes(x=as.factor(bc_amp_cycles), y=duplicates))+
+  geom_jitter()
+ggplot(atable, aes(x=as.factor(bc_amp_cycles), y=total.x))+
+  geom_jitter()
+stable
+
+ggplot(atable, aes(x=duplicates, y=mapped))+
+  geom_point()
+
+atable %>% ggplot(x=bc_amp_cycles, y=mapped)+
+  geom_point()
+
+
+atable %>% mutate(frac_duplicates = duplicates/total.x) %>% ggplot(aes(x=as.factor(bc_amp_cycles), y=frac_duplicates)) + geom_jitter()
+atab
+
+interactions::interact_plot(y1, pred = max_ct, modx = 'lp_amp_cycles', interval = TRUE, plot.points = TRUE, line.thickness = 0.5)
+
 #m1 fites best, let's plot
 modelplot <- interactions::interact_plot(m1, pred = max_ct, modx = 'organism', interval = TRUE, plot.points = TRUE, line.thickness = 0.5)
-modelplot
-#intuitively this looks like the model fits the data better than the frac_mapped 
-#let's stick with this guy
-#let's plot with the coverage plot
-
-#now let's get the summary data
-total_tbl <- total_tbl %>% mutate(frac_duplicates = duplicates / mapped)
-total_tbl %>% if_else(organism == 'mycoplasma', genome_size = 1, genome_size = 2)
-
-total_tbl <-  total_tbl %>% mutate(genome_size = case_when(
-  organism == 'mycoplasma' ~ 1029022,
-  organism == 'anthrax'~ 5227419
-))
-total_tbl$mean_doc = (total_tbl$mapped*75)/total_tbl$genome_size
-
-tbldata <- total_tbl %>% group_by(organism) %>% summarise(median_reads = median(total.x), min_reads = min(total.x), max_reads = max(total.x), min_max_ct = min(max_ct), max_max_ct = max(max_ct), median_max_ct = median(max_ct), min_conc = min(cap_lib_conc), max_conc = max(cap_lib_conc),median_conc = median(cap_lib_conc), min_dups = min(frac_duplicates), max_dups = max(frac_duplicates) ,median_duplicate_proportion = median(frac_duplicates), min_mapped = min(frac_mapped), max_mapped = max(frac_mapped), median_mapped_proportion = median(frac_mapped), median_mean_doc = median(mean_doc), min_doc = min(mean_doc), max_doc = max(mean_doc))
-
-
-tbl <- flextable::flextable(tbldata)
-tbl <- flextable::set_header_labels(tbl, median_reads = "Median Reads", median_max_ct = "Median Ct", median_conc = "Median Conc (ng/ul)", median_duplicate_proportion = 'Median Proportion Duplicates', median_mapped_proportion = "Median Proportion Mapped", median_mean_doc = "Median Avg. Depth of Coverage", organism = "Organism")
-
-toprow <- plot_grid(covplot, modelplot, base_asp = 1.618, labels = c('A', 'B'))
-
-total_reads <- total_tbl %>% ggplot(aes(x=organism, y=total.x)) +
-  geom_boxplot(width = 0.5)+
-  geom_jitter() +
-  theme_minimal() +
-  labs(x="Organism", y="Total Reads")
-frac_mapped <- total_tbl %>% ggplot(aes(x=organism, y=frac_mapped)) +
-  geom_boxplot(width = 0.5)+
-  geom_jitter() +
-  theme_minimal() +
-  labs(x="Organism", y="Proportion Mapped Reads")
-ct <- total_tbl %>% ggplot(aes(x=organism, y=max_ct)) +
-  geom_boxplot(width = 0.5)+
-  geom_jitter() +
-  theme_minimal() +
-  labs(x="Organism", y="Ct")
-duplicate_reads <- total_tbl %>% ggplot(aes(x=organism, y=frac_duplicates)) +
-  geom_boxplot(width = 0.5)+
-  geom_jitter() +
-  theme_minimal() +
-  labs(x="Organism", y="Proportion of Reads Duplicate")
-total_tbl$`%_bases_above_15` <- as.numeric(total_tbl$`%_bases_above_15`)
-abovefifteen <- total_tbl %>% ggplot(aes(x=organism, y=`%_bases_above_15`)) +
-  geom_boxplot(width = 0.5)+
-  geom_jitter() +
-  theme_minimal() +
-  labs(x="Organism", y="Percent Bases Above 15X")
-conc <- total_tbl %>% ggplot(aes(x=organism, y=cap_lib_conc)) +
-  geom_boxplot(width = 0.5)+
-  geom_jitter() +
-  theme_minimal() +
-  labs(x="Organism", y="Concentration (ng/ul)")
-doc <- total_tbl %>% ggplot(aes(x=organism, y=mean_doc)) +
-  geom_boxplot(width = 0.5)+
-  geom_jitter() +
-  theme_minimal() +
-  labs(x="Organism", y="Mean DOC")
-
-doc <- total_tbl %>% ggplot(aes(x=`%_bases_above_15`, y=mean_doc, color=organism)) +
+modelplot + labs(x="Max Ct", y ="Mapped Reads", color="Organism")
+totalmapped = modelplot
+modelplot$data %>% 
+  ggplot(aes(x=max_ct, y=mapped))+
   geom_point()
-doc
-sequencingstats <-   plot_grid(total_reads, frac_mapped, abovefifteen, duplicate_reads, labels = c('A', 'B', 'C', 'D'))
-labstats <- plot_grid(ct,conc, labels = c("A", "B"))
-labstats
+modelplot$layers
+totalmapped
 
-total_tbl %>% filter(organism == 'mycoplasma') %>% count()
+antbl = total_tbl %>% filter(organism == 'anthrax')
+anm0 <- MASS::glm.nb(data=total_tbl, mapped ~ max_ct)
+
+jtools::effect_plot(anm0, pred = max_ct, interval = TRUE, plot.points = TRUE, colors = "#f58d42", point.color = '#f58d42')
+jtools::effect_plot(y1)
+
+plot1
+plot1 + theme_sjplot()
+
+#for assessing fit of nb
+#install.packages("DHARMa")
+simulationOutput <- DHARMa::simulateResiduals(fittedModel = m1, plot = T)
+hist(residuals(simulationOutput))
+
+s_tbl<-total_tbl
+s_tbl<-rename(s_tbl, fifteen = `%_bases_above_15`)
+s_tbl$fifteen <- s_tbl$fifteen/100
+d0  <- glm(data=s_tbl,fifteen ~ max_ct, family=binomial(link="logit"))
+d1  <- glm(data=s_tbl,fifteen ~ organism*max_ct, family=binomial(link="logit"))
+d2  <- glm(data=s_tbl,fifteen ~ organism*I(max_ct^2), family=binomial(link="logit"))
+
+summary(d2)
+fifteen<-interactions::interact_plot(d2, pred = max_ct, modx = 'organism',interval = TRUE, plot.points = TRUE, line.thickness = 0.5)
+
+#how many reads to cover genome to 15X
+newdf <- data.frame(
+  organism = c("anthrax", "mycoplasma"),
+  max_ct = c(39, 34)
+)
+
+predict(m1, newdf, type = "response", interval = 'prediction')
+
+
+legend <- get_legend(
+  # create some space to the left of the legend
+  totalmapped + theme(legend.box.margin = margin(0, 0, 0, 12))
+)
+legend
+
+totalmapped = totalmapped + xlab("Max Ct") + ylab("Total Mapped Reads") 
+fracmapped =  fracmapped  + xlab("Max Ct")  + ylab("Proportion Mapped Reads") +theme_minimal()+ theme(legend.position = "none")
+fifteen = fifteen + xlab("Max Ct") + ylab("Proportion Baited Region > 15X") +theme_minimal()+ theme(legend.position = "none")
+totalmapped
+
+
+total_anth = filter(total_tbl, organism == 'anthrax')
+total_anth %>% ggplot(aes(x=bc_amp_cycles, y=duplicates))+geom_boxplot()
+
+
+
+
+#plot pool/frac mapped reads
+tlfmdata = read.csv('~/Projects/bactocap/metadata/tlf_mdata.csv')
+tlfmdata$sample_id = paste0(tlfmdata$Carcass.ID, "-", toupper(substring(tlfmdata$sample.type, 1, 1)))
+anthmdata = read.csv("~/Projects/bactocap/metadata/anthrax-metadata.csv")
+full_anth_mdata = left_join(tlfmdata, anthmdata)
+
+anmapping = read.csv("~/Projects/bactocap/datasets/anthrax/results/anth_mapping.csv")
+final_full_mdata = left_join(full_anth_mdata, anmapping, by = c('polyom_id' = 'sample_id'))
+write.csv(final_full_mdata, '~/Projects/bactocap/metadata/full_anth_metadata_ud.csv')
+mdata = read.csv('~/Projects/bactocap/metadata/full_anth_metadata.csv')
+mdata %>% mutate(frac_mapped = mapped/total) %>% ggplot(aes(x=Pooled, y=frac_mapped, fill=Pooled))+
+  geom_jitter()+
+  geom_boxplot(width = 0.3) +
+  theme_minimal()+
+  scale_fill_manual(values = c("#577590", "#F94144")) +
+  labs(x='Pooled Yes/No', y='Proportion Mapped Reads')
+
+ggplot(mdata, aes(x=mdata$Pooled, y=frac_mapped))
+

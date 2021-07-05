@@ -23,20 +23,20 @@ RO189aFL	KABart	RO189a	Rodent Flea			Moshi Fleas	19.15		bart	8	2	1656	1	19.15	NA
 RO189bFL	KABart	RO189b	Rodent Flea			Moshi Fleas	26.85		bart	8	2	1656	1	26.85	NA	NA	NA	NA	NA	NA	field
 RO193aFL	KABart	RO193a	Rodent Flea			Moshi Fleas	21.27		bart	8	2	1656	1	21.27	NA	NA	NA	NA	NA	NA	field
 RO248bFL	KABart	RO248b	Rodent Flea			Moshi Fleas	29.08		bart	8	2	1656	1	29.08	NA	NA	NA	NA	NA	NA	field
-Bacto-10	Bru	Control	Bru_APHABruAb_PosControl_Dil1	dunno	1	Isolate	Pos Control Bru Serial Dilution	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-11	Bru	Control	Bru_APHABruAb_PosControl_Dil2	dunno	2	Isolate	Pos Control Bru Serial Dilution	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-12	Bru	Control	Bru_APHABruAb_PosControl_Dil2	dunno	2	Isolate	Pos Control Bru Serial Dilution	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-13	Bru	Control	Bru_APHABruAb_PosControl_Dil3	dunno	3	Isolate	Pos Control Bru Serial Dilution	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-14	Bru	Control	Bru_APHABruAb_PosControl_Dil3	dunno	3	Isolate	Pos Control Bru Serial Dilution	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-15	Bru	Control	Bru_APHABruAb_PosControl_Dil4	dunno	4	Isolate	Pos Control Bru Serial Dilution	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-16	Bru	Control	Bru_APHABruAb_PosControl_Dil4	dunno	4	Isolate	Pos Control Bru Serial Dilution	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-17	Bru	Control	Bru_APHABruAb_PosControl_Dil1 + Cattle ~ SwabConc	bits_of_cow	1	Isolate + Cattle	Host Impact	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-18	Bru	Control	Bru_APHABruAb_PosControl_Dil1 + Cattle ~ SwabConc	bits_of_cow	1	Isolate + Cattle	Host Impact	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-19	Bru	Control	Bru_APHABruAb_PosControl_Dil3 + Cattle ~ SwabConc	bits_of_cow	3	Isolate + Cattle	Host Impact	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-20	Bru	Control	Bru_APHABruAb_PosControl_Dil3 + Cattle ~ SwabConc	bits_of_cow	3	Isolate + Cattle	Host Impact	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-21	Bru	Control	Bru_APHABruAb_PosControl_Dil5 + Cattle ~ SwabConc	bits_of_cow	5	Isolate + Cattle	Host Impact	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-22	Bru	Control	Bru_APHABruAb_PosControl_Dil5 + Cattle ~ SwabConc	bits_of_cow	5	Isolate + Cattle	Host Impact	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
-Bacto-9	Bru	Control	Bru_APHABruAb_PosControl_Dil1	dunno	1	Isolate	Pos Control Bru Serial Dilution	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-10	Bru	Control	Bru_APHABruAb_PosControl_Dil1	Water	1	Isolate	Pos Control Bru Serial Dilution	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-11	Bru	Control	Bru_APHABruAb_PosControl_Dil2	Water	2	Isolate	Pos Control Bru Serial Dilution	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-12	Bru	Control	Bru_APHABruAb_PosControl_Dil2	Water	2	Isolate	Pos Control Bru Serial Dilution	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-13	Bru	Control	Bru_APHABruAb_PosControl_Dil3	Water	3	Isolate	Pos Control Bru Serial Dilution	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-14	Bru	Control	Bru_APHABruAb_PosControl_Dil3	Water	3	Isolate	Pos Control Bru Serial Dilution	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-15	Bru	Control	Bru_APHABruAb_PosControl_Dil4	Water	4	Isolate	Pos Control Bru Serial Dilution	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-16	Bru	Control	Bru_APHABruAb_PosControl_Dil4	Water	4	Isolate	Pos Control Bru Serial Dilution	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-17	Bru	Control	Bru_APHABruAb_PosControl_Dil1 + Cattle ~ SwabConc	Bovine_DNA	1	Isolate + Cattle	Host Impact	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-18	Bru	Control	Bru_APHABruAb_PosControl_Dil1 + Cattle ~ SwabConc	Bovine_DNA	1	Isolate + Cattle	Host Impact	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-19	Bru	Control	Bru_APHABruAb_PosControl_Dil3 + Cattle ~ SwabConc	Bovine_DNA	3	Isolate + Cattle	Host Impact	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-20	Bru	Control	Bru_APHABruAb_PosControl_Dil3 + Cattle ~ SwabConc	Bovine_DNA	3	Isolate + Cattle	Host Impact	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-21	Bru	Control	Bru_APHABruAb_PosControl_Dil5 + Cattle ~ SwabConc	Bovine_DNA	5	Isolate + Cattle	Host Impact	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-22	Bru	Control	Bru_APHABruAb_PosControl_Dil5 + Cattle ~ SwabConc	Bovine_DNA	5	Isolate + Cattle	Host Impact	Double	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
+Bacto-9	Bru	Control	Bru_APHABruAb_PosControl_Dil1	Water	1	Isolate	Pos Control Bru Serial Dilution	Single	bru	25	1	1543	NA	NA	1	NA	NA	NA	NA	NA	control
 IND-0376	INDITE	INDITE-0376	Isolate			Isolate	Brucella qPCR Pos	Double	bru	25	2	1656	NA	NA	1	NA	NA	NA	NA	NA	field
 Bacto-7	Bru	Control	BruAb&CoxPosConc			Isolate	Mixed Pos Control Bru & Cox	Single	bru_cox	38	1	1543	NA	NA	1	NA	1	NA	NA	NA	control
 Bacto-8	Bru	Control	BruAb&CoxPosConc			Isolate	Mixed Pos Control Bru & Cox	Double	bru_cox	38	1	1543	NA	NA	1	NA	1	NA	NA	NA	control
