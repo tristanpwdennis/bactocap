@@ -1,8 +1,11 @@
-library(tidyverse)
-library(RColorBrewer)
-library(ggridges)
-library(cowplot)
-library(pheatmap)
+#ls pkg
+pkg = c("tidyverse", "cowplot", "RColorBrewer", "cowplot", "pheatmap")
+#install.packages(pkg) #install packages if you need them and load
+new.packages <- pkg[!(pkg %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+lapply(pkg, require, character.only = TRUE)#
+
+
 
 setwd('~/Projects/bactocap/datasets/mlst/')
 mapstats <- read_delim('/Users/tristanpwdennis/Projects/bactocap/ancillary/metadata/idxstats_udref.txt', delim = '\t', col_names = FALSE)
