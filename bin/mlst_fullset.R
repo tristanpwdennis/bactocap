@@ -10,9 +10,9 @@ colnames(mapstats) = c('sample_id', 'locus', 'length', 'mapped', 'unmapped')
 mapstats$sample_id = sub("/[^/]+$", "", mapstats$sample_id) 
 mapstats$sample_id = sub("_[^_]+$", "", mapstats$sample_id) 
 #fix mapstats sample id
-targstats <- read_delim('~/Projects/bactocap/ancillary/metadata/targstats.txt', delim = '\t')
-metadata <- read_delim('~/Projects/bactocap/ancillary/metadata/mlst_metadata.tsv', delim = '\t')
-mlstmapping <- read_csv('~/Projects/bactocap/ancillary/metadata/mlst-mapping.csv')
+targstats <- read_delim('~/Projects/bactocap/datasets/mlst/metadata/target_stats.txt', delim = '\t')
+metadata <- read_delim('~/Projects/bactocap/datasets/mlst/metadata/mlst_metadata.tsv', delim = '\t')
+mlstmapping <- read_csv('~/Projects/bactocap/datasets/mlst/metadata/mapstatstable_mlst.csv')
 
 
 
