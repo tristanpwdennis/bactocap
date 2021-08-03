@@ -4,12 +4,11 @@
 #Tristan Dennis, August 2021
 
 #load and.or install packages we need
-pkg = c("tidyverse", "data.table", "sjPlot", "cowplot", "RColorBrewer", "cowplot", "DHARMa", "interactions", "jtools")
+pkg = c("tidyverse", "data.table", "cowplot", "RColorBrewer", "cowplot", "DHARMa", "interactions", "jtools")
 #install.packages(pkg) #install packages if you need them and load
 new.packages <- pkg[!(pkg %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 lapply(pkg, require, character.only = TRUE)#
-
 
 anth = read.csv('~/Projects/bactocap/metadata/anthrax_sample_sequencing_coverage_data_st1.csv')
 myco = read.csv('~/Projects/bactocap/metadata/mycoplasma_sample_sequencing_coverage_data_st2.csv')
@@ -17,9 +16,7 @@ myco = read.csv('~/Projects/bactocap/metadata/mycoplasma_sample_sequencing_cover
 anth = anth %>% select(sample_id, mean, max_ct, cap_lib_conc, organism.x, X._bases_above_15, frac_duplicates, frac_mapped, duplicates, mapped, amplification_cycles_bait_capture)
 myco = myco %>% select(sample_id, mean, max_ct, cap_lib_conc, organism.x, X._bases_above_15, frac_duplicates, frac_mapped, duplicates, mapped) %>% mutate(amplification_cycles_bait_capture = NA)
 
-
 s = rbind(anth, myco)
-
 
 #############
 #PLOTS
@@ -60,8 +57,12 @@ duplicates <- s %>% dplyr::select(organism.x, frac_duplicates) %>% drop_na() %>%
   xlab("Organism")
 duplicates
 
-
+#plot final
 cowplot::plot_grid(meandoc, genomeabovefifteen, duplicates,  NULL, labels = c("A", "B", "C"), ncol = 2)
+
+
+###############
+#MODELS
 
 #duplicates
 d0 <- MASS::glm.nb(data=s, duplicates ~ max_ct)
@@ -106,15 +107,10 @@ summary(m2)
 summary(m3)
 summary(m4)
 
-#m1 fites best, let's plot
+#m1 fites best, let's plot interxns
 modelplot <- interactions::interact_plot(m1, pred = max_ct, modx = 'organism.x', interval = TRUE, plot.points = TRUE, line.thickness = 0.5)
-modelplot + labs(x="Max Ct", y ="Mapped Reads", color="Organism")
-totalmapped = modelplot
-modelplot$data %>% 
-  ggplot(aes(x=max_ct, y=mapped))+
-  geom_point()
-modelplot$layers
-totalmapped
+modelplot + labs(x="Max Ct", y ="Mapped Reads", color="Organism") #add labels
+modelplot
 
 #for assessing fit of nb
 #install.packages("DHARMa")
@@ -125,5 +121,3 @@ hist(residuals(simulationOutput))
 s %>% ggplot(aes(x=as.factor(amplification_cycles_bait_capture), y=mapped)) + geom_jitter()
 y0 = MASS::glm.nb(data=s, mapped ~ as.factor(amplification_cycles_bait_capture))
 summary(y0)
-
-
