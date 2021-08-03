@@ -1,6 +1,9 @@
+###################
+#Bactocap Mycoplasma Anthrax
+#In support of CITATION, DATE
+#Tristan Dennis, August 2021
 
-
-#ls pkg
+#load and.or install packages we need
 pkg = c("tidyverse", "data.table", "sjPlot", "cowplot", "RColorBrewer", "cowplot", "DHARMa", "interactions", "jtools")
 #install.packages(pkg) #install packages if you need them and load
 new.packages <- pkg[!(pkg %in% installed.packages()[,"Package"])]
@@ -8,34 +11,61 @@ if(length(new.packages)) install.packages(new.packages)
 lapply(pkg, require, character.only = TRUE)#
 
 
-#func to read csvs and take filename as a column
+#######
+#define some functions
+
+#func to read GATK DepthOfCoverage Summary csvs and take filename as a column
 read_summarycov <- function(flnm) {
   read_csv(flnm) %>% 
     mutate(filename = basename(flnm))
 }
 
+##func to read GATK DepthOfCoverage Interval (quite big, hence fread) csvs and take filename as a column
 read_intervalcov <- function(flnm) {
   data.table::fread(flnm) %>% 
     dplyr::select(9) %>% 
-    filter(. > 80) %>%
+    filter(. > 80) %>% #remove
     count() %>% 
     mutate(filename = basename(flnm))
 }
 
 
+#function for getting rid of rubbish from fields (path, suffix, etc)
+remove_rubbish <- function(table, suffix) {
+  table$filename <- str_replace(table$filename, suffix, " ") #remove suffix from filename
+  table$organism =  str_replace(table$organism, "~/Projects/bactocap/datasets/", "") #remove path from organism
+  table$organism =  str_replace(table$organism, "/results/", "") #remove rest of path
+ # table$sample_id = gsub('(.*)_\\w+', '\\1', table$sample_id)
+  return(table)
+}
 
-#################
-#Per-sample fraction of baits covered to a given d.o.c
 
+###############
+#Read sample data and generate sample metadata dataframes 
+#this uses ST1 and ST2
+
+#get our dirs
 anthrax_dir <- c("~/Projects/bactocap/datasets/anthrax/results/")
 myco_dir <- c("~/Projects/bactocap/datasets/mycoplasma/results/")
-mlst_dir <- c("~/Projects/bactocap/datasets/mlst/results/")
-
 dirs <- c(anthrax_dir, myco_dir)
 
-##############################
-#persample summary data
+#read in anthrax and mycoplasma metadata (sample data, etc) - ST1
+anth_metadata = read.csv('~/Projects/bactocap/metadata/anthrax_sample_data.csv') %>% mutate(organism = 'anthrax')
+#formyco we don't have amp cycles yet so add an na column for that field - ST2
+myco_metadata = read.csv('~/Projects/bactocap/metadata/myco-full-metadata.csv') %>% dplyr::select(organism, sample_id, cap_lib_conc, init_lib_conc, max_ct) %>% add_column(bc_amp_cycles = NA)
+#read myco mapping data
+myco_mapping = read.csv("~/Projects/bactocap/datasets/mycoplasma/results/myco_mapping.csv")
+#readd anth_mapping data
+anth_mapping = read.csv("~/Projects/bactocap/datasets/anthrax/results/anth_mapping.csv")
 
+#collect mapping data
+anth_metadata = anth_metadata %>% left_join(anth_mapping)
+myco_metadata = myco_mapping %>% left_join(myco_mapping)
+
+
+
+###############
+#Collect coverage information from GATK DoC output files, anc join to mapping/flagstat information
 sum_tbl <- NULL 
 for (dir in dirs){
   tbl <- list.files(path = dir,pattern = ".sample_summary", full.names = T) %>% 
@@ -51,79 +81,63 @@ for (dir in dirs){
   tbl$organism = paste0(dir)
   interval_tbl <- rbind(interval_tbl, tbl)
 }
-  
 
-sum_tbl$filename <- str_replace(sum_tbl$filename, ".sample_summary", "")
-sum_tbl$organism <- str_replace(sum_tbl$organism, "~/Projects/bactocap/datasets/", "")
-sum_tbl$organism <- str_replace(sum_tbl$organism, "/results/", "")
-sum_tbl$sample_id = gsub('(.*)_\\w+', '\\1', sum_tbl$sample_id)
-
-interval_tbl$sample_id <- str_replace(interval_tbl$filename, ".sample_interval_statistics", "")
-interval_tbl$organism <- str_replace(interval_tbl$organism, "~/Projects/bactocap/datasets/", "")
-interval_tbl$organism <- str_replace(interval_tbl$organism, "/results/", "")
-interval_tbl$sample_id = gsub('(.*)_\\w+', '\\1', interval_tbl$sample_id)
-
-interval_tbl = interval_tbl %>% mutate(baits_covered_overfifteen = case_when(
-  organism == 'anthrax' ~ `depth>=15`/148707,
-  organism == 'mycoplasma' ~ `depth>=15`/24415
-))
+##remove rubbish
+sum_tbl = remove_rubbish(sum_tbl, ".sample_summary")
+interval_tbl = remove_rubbish(sum_tbl, ".sample_interval_statistics")
 
 
-mappingdata  <- rbind(read.csv("~/Projects/bactocap/datasets/mycoplasma/results/myco_mapping.csv") %>% mutate(organism = 'mycoplasma'), 
-read.csv("~/Projects/bactocap/datasets/anthrax/results/anth_mapping.csv") %>% mutate(organism = 'anthrax'))
-mappingdata$sample_id = gsub('(.*)_\\w+', '\\1', mappingdata$sample_id)
-
-anth_metadata = read.csv('~/Projects/bactocap/metadata/anthrax-metadata.csv') %>% dplyr::select(organism, sample_id, cap_lib_conc, init_lib_conc, max_ct, bc_amp_cycles)
-myco_metadata = read.csv('~/Projects/bactocap/metadata/myco-full-metadata.csv') %>% dplyr::select(organism, sample_id, cap_lib_conc, init_lib_conc, max_ct) %>% add_column(bc_amp_cycles = NA)
+anth_metadata = left_join(anth_metadata, sum_tbl %>% filter(organism == 'anthrax'), by = c('sample_id' = 'sample_id'))
+myco_metadata = left_join(myco_metadata, sum_tbl %>% filter(organism == 'mycoplasma'), by = c('sample_id' = 'sample_id'))
 
 
 
+anth_metadata = anth_metadata %>% mutate(amisuccessful= case_when(as.numeric(`%_bases_above_15`) > 80 ~ 'yes',
+                                                                  as.numeric(`%_bases_above_15`) < 80 ~ 'no'))
+
+myco_metadata = myco_metadata %>% mutate(amisuccessful= case_when(as.numeric(`%_bases_above_15`) > 80 ~ 'yes',
+                                                                  as.numeric(`%_bases_above_15`) < 80 ~ 'no'))
+
+anth_metadata = anth_metadata %>% mutate(frac_mapped = mapped/total.x)
+anth_metadata = anth_metadata %>% mutate(frac_duplicates = duplicates/total.x)
+
+myco_metadata = myco_metadata %>% mutate(frac_mapped = mapped/total.x)
+myco_metadata = myco_metadata %>% mutate(frac_duplicates = duplicates/total.x)
 
 
-metadata = rbind(anth_metadata, myco_metadata)
+write_csv(anth_metadata, "~/Projects/bactocap/metadata/anthrax_sample_sequencing_coverage_data_st1.csv")
+write_csv(myco_metadata, "~/Projects/bactocap/metadata/mycoplasma_sample_sequencing_coverage_data_st2.csv")
+
+anth_metadata %>% select(-total.y, -secondary, -supplementary, -paired, -read1, -read2, -properly_paired, -with_itself_and_mate_mapped, -mate_on_diff_chr, -mate_on_diff_chrover5, -singletons, `X`, total.y, organism.y)
+myco_metadata %>% select(-total.y, -secondary, -supplementary, -paired, -read1, -read2, -properly_paired, -with_itself_and_mate_mapped, -mate_on_diff_chr, -mate_on_diff_chrover5, -singletons, X, total.y)
 
 
-
-metadata = anth_metadata %>% 
-  dplyr::select(organism, sample_id, cap_lib_conc, init_lib_conc, max_ct, bc_amp_cycles) %>% bind_rows(myco_metadata %>% dplyr::select(organism, sample_id, cap_lib_conc, init_lib_conc, max_ct) %>% add_column(bc_amp_cycles = NA))
-
-
-
-
-
-metadata %>% group_by(organism) %>% count()
-mappingdata %>% group_by(organism) %>% count()
-
-#join interval to total cov tables
-covtable = interval_tbl %>% 
-  dplyr::select(sample_id, baits_covered_overfifteen) %>% 
-  left_join(sum_tbl %>% 
-              dplyr::select(-organism, -filename)) %>% 
-  rename(frac_genome_bases_over_15 = `%_bases_above_15`) 
-
-
-left_join(mappingdata, covtable)
-################
-#let's take a look at our metadata
+#join mapping data to coverage data to make ST3 final
 total_tbl = left_join(mappingdata, covtable, by = c('sample_id' = 'sample_id'))
 
-#check everything is ok (e.g. we have the req uired number of samples for anthrac (93) and myco (56))
+#create fracmapped column
+total_tbl$frac_mapped = total_tbl$mapped/total_tbl$total.x
+
+#check everything is ok (e.g. we have the required number of samples for anthrac (93) and myco (56))
 total_tbl %>%  group_by(organism) %>% count()
 
 #join to sample metadata
 s = left_join(metadata, total_tbl, by =c('sample_id' = 'sample_id'))
 
-s = s %>% mutate(amisuccessful= case_when(baits_covered_overfifteen > 0.8 ~ 'yes',
-                                         baits_covered_overfifteen < 0.8 ~ 'no'))
+#define successful and unsuccessful samples as frac genome bases over 15X > 80%
+s = s %>% mutate(amisuccessful= case_when(frac_genome_bases_over_15 > 0.8 ~ 'yes',
+                                          frac_genome_bases_over_15 < 0.8 ~ 'no'))
 
 s %>% group_by(organism.x, amisuccessful) %>% count()
 
 
-#wo
 write_csv(s, '~/Projects/bactocap/metadata/all_metadata.csv')
 
+#############
+#PLOTS
 
-#pl mean_d_o_c
+
+#plot mean doc by organism
 meandoc <- s %>% dplyr::select(organism.x, mean) %>% drop_na() %>% 
   ggplot(aes(x = organism.x, y=mean, fill=organism.x)) +
   geom_boxplot(width = 0.5, alpha = 0.7) +
@@ -135,17 +149,17 @@ meandoc <- s %>% dplyr::select(organism.x, mean) %>% drop_na() %>%
   xlab("Organism")
 meandoc
 
-#genome bases above 15 - you go in a table
-baitsabovefifteen<- s %>% dplyr::select(organism.x, baits_covered_overfifteen) %>% drop_na() %>% 
-  ggplot(aes(x = organism.x, y=as.numeric(baits_covered_overfifteen), fill=organism.x)) +
-  geom_boxplot(width = 0.5, alpha = 0.7) +
-  geom_jitter(width = 0.1, alpha=0.5) +
-  scale_fill_manual(values=c("deepskyblue1", "darkorange")) +
-  theme_minimal() +
-  theme(legend.position = "none") +
-  ylab("Proportion Baits Covered Above 15X") +
-  xlab("Organism")
-baitsabovefifteen
+##plot genome bases above 15X
+#baitsabovefifteen<- s %>% dplyr::select(organism.x, frac_genome_bases_over_15) %>% drop_na() %>% 
+#  ggplot(aes(x = organism.x, y=as.numeric(frac_genome_bases_over_15), fill=organism.x)) +
+#  geom_boxplot(width = 0.5, alpha = 0.7) +
+#  geom_jitter(width = 0.1, alpha=0.5) +
+#  scale_fill_manual(values=c("deepskyblue1", "darkorange")) +
+#  theme_minimal() +
+#  theme(legend.position = "none") +
+#  ylab("Proportion Baits Covered Above 15X") +
+#  xlab("Organism")
+#baitsabovefifteen
 
 #genome bases above 15
 genomeabovefifteen<- s %>% dplyr::select(organism.x, frac_genome_bases_over_15) %>% drop_na() %>% 
@@ -155,7 +169,7 @@ genomeabovefifteen<- s %>% dplyr::select(organism.x, frac_genome_bases_over_15) 
   scale_fill_manual(values=c("deepskyblue1", "darkorange")) +
   theme_minimal() +
   theme(legend.position = "none") +
-  ylab("Proportion Genome Above 15X") +
+  ylab("Proportion Baited Genome Above 15X") +
   xlab("Organism")
 genomeabovefifteen
 
@@ -174,20 +188,20 @@ duplicates <- s %>% dplyr::select(organism.x, duplicates, total.x) %>% drop_na()
 duplicates
 
 
-cowplot::plot_grid(duplicates, meandoc, genomeabovefifteen, NULL, labels = c("A", "B", "C"), ncol = 2)
+cowplot::plot_grid(meandoc, genomeabovefifteen, duplicates,  NULL, labels = c("A", "B", "C"), ncol = 2)
 
-statstab = s %>%  
-  mutate(frac_duplicates = duplicates/total.x) %>% 
-  select(organism.x,frac_duplicates, frac_genome_bases_over_15, mean) %>% drop_na()
 
-statstab %>% group_by(organism.x) %>% summarise(
-  median_dups = median(as.numeric(frac_genome_bases_over_15)),
-  median
-)  
+##collect summary stats - FIX
+#statstab = s %>%  
+#  mutate(frac_duplicates = duplicates/total.x) %>% 
+#  select(organism.x,frac_duplicates, frac_genome_bases_over_15, mean) %>% drop_na()
+#
+#statstab %>% group_by(organism.x) %>% summarise(
+#  median_dups = median(as.numeric(frac_genome_bases_over_15)),
+#  median
+#)  
   
   
-
-
 #duplicates
 d0 <- MASS::glm.nb(data=s, duplicates ~ max_ct)
 d1 <- MASS::glm.nb(data=s, duplicates ~ organism.x*max_ct)
@@ -218,43 +232,23 @@ fracmapped
 #the frac mapped shouldn't matter as we are modelling organism as an interaction again
 #so it will consider mapped for each organism and whether the organisms are significantly different to one another
 
-m0 <- MASS::glm.nb(data=total_tbl, mapped ~ max_ct)
-m1 <- MASS::glm.nb(data=total_tbl, mapped ~ organism*max_ct)
-m2 <- MASS::glm.nb(data=total_tbl, mapped ~ organism+max_ct)
-m3 <- MASS::glm.nb(data=total_tbl, mapped ~ organism*cap_lib_conc)
-m4 <- MASS::glm.nb(data=total_tbl, mapped ~ organism*max_ct+cap_lib_conc)
-m5 <- MASS::glm.nb(data=total_tbl, mapped ~ organism*max_ct+cap_lib_conc+sample_conc)
+m0 <- MASS::glm.nb(data=s, mapped ~ max_ct)
+m1 <- MASS::glm.nb(data=s, mapped ~ organism.x*max_ct)
+m2 <- MASS::glm.nb(data=s, mapped ~ organism.x+max_ct)
+m3 <- MASS::glm.nb(data=s, mapped ~ organism.x*cap_lib_conc)
+m4 <- MASS::glm.nb(data=s, mapped ~ organism.x*max_ct+cap_lib_conc)
 min(m1$aic, m0$aic, m2$aic)
 summary(m0)
 summary(m1)
 summary(m2)
 summary(m3)
 summary(m4)
-summary(m5)
 
 
-
-
-
-
-atable = total_tbl %>% filter(organism == 'anthrax')
-y0 <- MASS::glm.nb(data=atable, mapped ~ max_ct)
-y1 <- MASS::glm.nb(data=atable, mapped ~ max_ct + as.factor(bc_amp_cycles))
-summary(y1)
-plot(y1)
-
-
-atable = total_tbl %>% filter(organism == 'anthrax')
-f0 <- MASS::glm.nb(data=atable, duplicates ~ max_ct)
-f1 <- MASS::glm.nb(data=atable, duplicates ~ max_ct + as.factor(bc_amp_cycles))
-summary(f1)
-
-
-ggplot(atable, aes(x=as.factor(bc_amp_cycles), y=duplicates))+
+ggplot(s, aes(x=as.factor(bc_amp_cycles), y=duplicates))+
   geom_jitter()
-ggplot(atable, aes(x=as.factor(bc_amp_cycles), y=total.x))+
+ggplot(s, aes(x=as.factor(bc_amp_cycles), y=total.x))+
   geom_jitter()
-stable
 
 ggplot(atable, aes(x=duplicates, y=mapped))+
   geom_point()
