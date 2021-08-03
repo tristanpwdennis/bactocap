@@ -54,10 +54,10 @@ anth_metadata = read.csv('~/Projects/bactocap/metadata/anthrax_sample_data.csv')
 #formyco we don't have amp cycles yet so add an na column for that field - ST2
 myco_metadata = read.csv('~/Projects/bactocap/metadata/myco_sample_data.csv') 
 #read myco mapping data
-myco_mapping = read.csv("~/Projects/bactocap/datasets/mycoplasma/results/myco_mapping.csv") 
+myco_mapping = read.csv("~/Projects/bactocap/metadata/myco_mapping.csv") 
 myco_mapping$sample_id = gsub('(.*)_\\w+', '\\1', myco_mapping$sample_id)
 #readd anth_mapping data
-anth_mapping = read.csv("~/Projects/bactocap/datasets/anthrax/results/anth_mapping.csv")
+anth_mapping = read.csv("~/Projects/bactocap/metadata/anth_mapping.csv")
 
 #collect mapping data
 anth_metadata = anth_metadata %>% left_join(anth_mapping)
