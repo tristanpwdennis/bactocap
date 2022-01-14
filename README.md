@@ -51,7 +51,7 @@ USAGE:
 nextflow run main.nf --dataset <dataset>
 
 Arguments:
-   --dataset  STRING: anthrax, mlst, mycoplasma  (e.g. --organism anthrax)  Pick whether to run BACTOCAP on anthrax, mlst, or mycoplasma datasets
+   --dataset  STRING: anthrax, mycoplasma  (e.g. --organism anthrax)  Pick whether to run BACTOCAP on anthrax, or mycoplasma datasets
 
 ====================================================================
 ```
@@ -74,7 +74,9 @@ A tab delimited text file ```mapping_stats.csv``` contains the flagstat data for
 
 Running the Rscript ```generate_bactocap_metadata.R``` will take the mapping output and parse it into a CSV containing sample metadata, mapping, duplicate and coverage information for anthrax and mycoplasma. Running ```anthrax_mycoplasma_analysis.R``` will generate plots if run in command line. Running in RStudio will let you inspect the output of the models.
 
+### Pointers
 
+Annotations are located in the `ancillary` directory. Reference genomes are contained in organism-specific directories under `datasets`
 
 
 
