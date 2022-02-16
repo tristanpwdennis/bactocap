@@ -1,5 +1,7 @@
-# bactocap
-This repo contains all the materials required to reproduce the analysis and workflow from the targeted sequence capture project in *Dennis et al, 2022*
+# bactocap: Anthrax and Mycoplasma
+### Target-enrichment sequencing yields valuable genomic data for difficult-to-culture bacteria of public health importance
+
+This repo contains all the materials required to reproduce the analysis and workflow from the targeted sequence capture project in *Dennis et al, 2022*, see: LINK
 
 ### Getting started
 
@@ -32,7 +34,7 @@ docker images
 You should see the gatk and align repos are in the list.
 
 ### Data
-The raw data are located at PRJEB46822 (_B. anthracis_) and PRJEB50216 (_M. amphoriforme). Download the raw reads into the corresponding dataset/organism/raw_read directories.
+The raw data are located at PRJEB46822 (_B. anthracis_) and PRJEB50216 (_M. amphoriforme_). Download the raw reads into the corresponding dataset/organism/raw_read directories.
 
 ### Running the workflow
 It's as simple as running 
