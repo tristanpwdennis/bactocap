@@ -15,66 +15,8 @@ lapply(pkg, require, character.only = TRUE)#
 #if running interactively
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-
-#function for getting rid of rubbish from fields (path, suffix, etc)
-remove_rubbish <- function(table, suffix) {
-  table$filename <- str_replace(table$filename, suffix, " ") #remove suffix from filename
-  table$organism =  str_replace(table$organism, "~/Projects/bactocap/datasets/", "") #remove path from organism
-  table$organism =  str_replace(table$organism, "/results/", "") #remove rest of path
- # table$sample_id = gsub('(.*)_\\w+', '\\1', table$sample_id)
-  return(table)
-}
-
-
-###############
-#Read sample data and generate sample metadata dataframes 
-#this uses ST1 and ST2
-
-#get our dirs
-anthrax_dir <- c("../datasets/anthrax/results/")
-myco_dir <- c("..//datasets/mycoplasma/results/")
-dirs <- c(anthrax_dir, myco_dir)
-
-#read in anthrax and mycoplasma metadata (sample data, etc) - ST1
-anth_metadata = read.csv('../ancillary/metadata/anthrax_sample_data.csv') %>% mutate(organism = 'anthrax')
-#formyco we don't have amp cycles yet so add an na column for that field - ST2
-myco_metadata = read.csv('../ancillary/metadata/myco_sample_data.csv') %>% dplyr::select(organism, sample_id, pooled, cap_lib_conc, init_lib_conc, max_ct) %>% add_column(bc_amp_cycles = NA)
-#read myco mapping data
-myco_mapping = read.csv("../ancillary/metadata/myco_mapping.csv")
-#readd anth_mapping data
-anth_mapping = read.csv("../ancillary/metadata/anth_mapping.csv")
-#read coverage data/mapping from baited regions
-sum_tbl = read.csv('../ancillary/metadata/anth_myco_baited_mapping.csv')
-
-#collect mapping data
-anth_metadata = anth_metadata %>% left_join(anth_mapping)
-myco_metadata = myco_metadata %>% left_join(myco_mapping)
-
-#join species specific metadata to species specific coverage info
-anth_metadata = left_join(anth_metadata, sum_tbl %>% filter(organism == 'anthrax'), by = c('sample_id' = 'sample_id'))
-myco_metadata = left_join(myco_metadata, sum_tbl %>% filter(organism == 'mycoplasma'), by = c('sample_id' = 'sample_id'))
-
-#get rid of crap cols/select useful ones
-x = anth_metadata %>% select(sample_id, organism.x, total.x, duplicates,mapped, mean, max_ct, bc_amp_cycles, pooled, cap_lib_conc, amisuccessful, percent_bases_above_15, mapped_in_baited_region)
-y = myco_metadata %>% select(sample_id, organism.x, total.x, duplicates,mapped, mean, max_ct, bc_amp_cycles, pooled, cap_lib_conc, amisuccessful, percent_bases_above_15, mapped_in_baited_region)
-#bind
-total_tbl = rbind(x,y)
-
-#create frac dup cols and coerce some vals to numeric
-total_tbl$frac_mapped = total_tbl$mapped/total_tbl$total.x
-total_tbl$frac_duplicates = total_tbl$duplicates/total_tbl$total.x
-total_tbl$cap_lib_conc = as.numeric(total_tbl$cap_lib_conc)
-total_tbl$`%_bases_above_15` = as.numeric(total_tbl$percent_bases_above_15)
-
-#join mapping data to coverage data to make ST3 final
-#total_tbl = left_join(total_tbl, covtable, by = c('sample_id' = 'sample_id'))
-
-#create fracmapped column
-total_tbl$frac_mapped = total_tbl$mapped_in_baited_region/total_tbl$total.x
-
-#define successful and unsuccessful samples as frac genome bases over 15X > 80%
-total_tbl = total_tbl %>% mutate(amisuccessful= case_when(percent_bases_above_15 > 0.8 ~ 'yes',
-                                                          percent_bases_above_15 < 0.8 ~ 'no'))
+#read metadata
+total_tbl = read.csv('~/Projects/bactocap/ancillary/metadata/all_metadata.csv')
 
 #############
 #PLOTS
@@ -140,7 +82,6 @@ fracmapped = total_tbl %>% dplyr::select(organism.x, frac_mapped, total.x) %>% d
   theme(axis.text.x = element_text(face = "italic"))+
   ylab("Proportion Of Total Reads Mapped") +
   xlab("Organism")
-
 
 #plot figure 1
 plots = cowplot::plot_grid(meandoc, genomeabovefifteen, fracmapped, nrow=1, labels = c('A', 'B', 'C'))
