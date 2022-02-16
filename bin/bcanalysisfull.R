@@ -3,7 +3,6 @@
 #In support of CITATION, DATE
 #Tristan Dennis, August 2021
 #r version R version 4.0.4 
-citation()
 #load and.or install packages we need
 pkg = c("tidyverse", "sjPlot", "cowplot", "cowplot", "DHARMa", "lme4", "MuMIn")
 #install.packages(pkg) #install packages if you need them and load
@@ -11,23 +10,10 @@ new.packages <- pkg[!(pkg %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 lapply(pkg, require, character.only = TRUE)#
 
-#######
-#define some functions
-
-#func to read GATK DepthOfCoverage Summary csvs and take filename as a column
-read_summarycov <- function(flnm) {
-  read_csv(flnm) %>% 
-    mutate(filename = basename(flnm))
-}
-
-##func to read GATK DepthOfCoverage Interval (quite big, hence fread) csvs and take filename as a column
-read_intervalcov <- function(flnm) {
-  data.table::fread(flnm) %>% 
-    dplyr::select(9) %>% 
-    filter(. > 80) %>% #remove
-    count() %>% 
-    mutate(filename = basename(flnm))
-}
+#setwd
+#setwd(getSrcDirectory()[1])
+#if running interactively
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 
 #function for getting rid of rubbish from fields (path, suffix, etc)
@@ -45,86 +31,40 @@ remove_rubbish <- function(table, suffix) {
 #this uses ST1 and ST2
 
 #get our dirs
-anthrax_dir <- c("~/Projects/bactocap/datasets/anthrax/results/")
-myco_dir <- c("~/Projects/bactocap/datasets/mycoplasma/results/")
+anthrax_dir <- c("../datasets/anthrax/results/")
+myco_dir <- c("..//datasets/mycoplasma/results/")
 dirs <- c(anthrax_dir, myco_dir)
 
 #read in anthrax and mycoplasma metadata (sample data, etc) - ST1
-anth_metadata = read.csv('~/Projects/bactocap/ancillary/metadata/anthrax_sample_data.csv') %>% mutate(organism = 'anthrax')
+anth_metadata = read.csv('../ancillary/metadata/anthrax_sample_data.csv') %>% mutate(organism = 'anthrax')
 #formyco we don't have amp cycles yet so add an na column for that field - ST2
-myco_metadata = read.csv('~/Projects/bactocap/ancillary/metadata/myco_sample_data.csv') %>% dplyr::select(organism, sample_id, pooled, cap_lib_conc, init_lib_conc, max_ct) %>% add_column(bc_amp_cycles = NA)
+myco_metadata = read.csv('../ancillary/metadata/myco_sample_data.csv') %>% dplyr::select(organism, sample_id, pooled, cap_lib_conc, init_lib_conc, max_ct) %>% add_column(bc_amp_cycles = NA)
 #read myco mapping data
-myco_mapping = read.csv("~/Projects/bactocap/ancillary/metadata/myco_mapping.csv")
+myco_mapping = read.csv("../ancillary/metadata/myco_mapping.csv")
 #readd anth_mapping data
-anth_mapping = read.csv("~/Projects/bactocap/ancillary/metadata/anth_mapping.csv")
+anth_mapping = read.csv("../ancillary/metadata/anth_mapping.csv")
+#read coverage data/mapping from baited regions
+sum_tbl = read.csv('../ancillary/metadata/anth_myco_baited_mapping.csv')
 
 #collect mapping data
 anth_metadata = anth_metadata %>% left_join(anth_mapping)
 myco_metadata = myco_metadata %>% left_join(myco_mapping)
-#myco_mapping$
 
-
-###############
-#Collect coverage information from GATK DoC output files, anc join to mapping/flagstat information
-#sum_tbl <- NULL 
-#for (dir in dirs){
-#  tbl <- list.files(path = dir,pattern = ".sample_summary", full.names = T) %>% 
-#    map_df(~read_summarycov(.)) %>% filter(sample_id != "Total")
-#  tbl$organism = paste0(dir)
-#  sum_tbl <- rbind(sum_tbl, tbl)
-#}
-#
-#interval_tbl <- NULL 
-#for (dir in dirs){
-#  tbl <- list.files(path = dir,pattern = ".sample_interval_statistics", full.names = T) %>% 
-#    map_df(~read_summarycov(.)) 
-#  tbl$organism = paste0(dir)
-#  interval_tbl <- rbind(interval_tbl, tbl)
-#}
-
-
-sum_tbl = read.csv('~/Projects/bactocap/ancillary/metadata/anth_myco_baited_mapping.csv')
-
-
-
-
-#sum_tbl$sample_id <- sub("_[^_]+$", "", sum_tbl$sample_id)
-
+#join species specific metadata to species specific coverage info
 anth_metadata = left_join(anth_metadata, sum_tbl %>% filter(organism == 'anthrax'), by = c('sample_id' = 'sample_id'))
 myco_metadata = left_join(myco_metadata, sum_tbl %>% filter(organism == 'mycoplasma'), by = c('sample_id' = 'sample_id'))
 
-
-
-anth_metadata = anth_metadata %>% mutate(amisuccessful= case_when(as.numeric(percent_bases_above_15) > 80 ~ 'yes',
-                                                                  as.numeric(percent_bases_above_15) < 80 ~ 'no'))
-
-myco_metadata = myco_metadata %>% mutate(amisuccessful= case_when(as.numeric(percent_bases_above_15) > 80 ~ 'yes',
-                                                                  as.numeric(percent_bases_above_15) < 80 ~ 'no'))
-
-anth_metadata = anth_metadata %>% mutate(frac_mapped = mapped/total.x)
-anth_metadata = anth_metadata %>% mutate(frac_duplicates = duplicates/total.x)
-
-myco_metadata = myco_metadata %>% mutate(frac_mapped = mapped/total.x)
-myco_metadata = myco_metadata %>% mutate(frac_duplicates = duplicates/total.x)
-
-
-#write_csv(anth_metadata, "~/Projects/bactocap/metadata/anthrax_sample_sequencing_coverage_data_st1.csv")
-#write_csv(myco_metadata, "~/Projects/bactocap/metadata/mycoplasma_sample_sequencing_coverage_data_st2.csv")
-
-#x = anth_metadata %>% select(-total.y, -secondary, -supplementary, -paired, -read1, -read2, -properly_paired, -with_itself_and_mate_mapped, -mate_on_diff_chr, -mate_on_diff_chrover5, -singletons, total.y, organism.y)
-#y = myco_metadata %>% select(-total.y, -secondary, -supplementary, -paired, -read1, -read2, -properly_paired, -with_itself_and_mate_mapped, -mate_on_diff_chr, -mate_on_diff_chrover5, -singletons,total.y)
-
-
-
+#get rid of crap cols/select useful ones
 x = anth_metadata %>% select(sample_id, organism.x, total.x, duplicates,mapped, mean, max_ct, bc_amp_cycles, pooled, cap_lib_conc, amisuccessful, percent_bases_above_15, mapped_in_baited_region)
 y = myco_metadata %>% select(sample_id, organism.x, total.x, duplicates,mapped, mean, max_ct, bc_amp_cycles, pooled, cap_lib_conc, amisuccessful, percent_bases_above_15, mapped_in_baited_region)
+#bind
 total_tbl = rbind(x,y)
+
+#create frac dup cols and coerce some vals to numeric
+total_tbl$frac_mapped = total_tbl$mapped/total_tbl$total.x
+total_tbl$frac_duplicates = total_tbl$duplicates/total_tbl$total.x
 total_tbl$cap_lib_conc = as.numeric(total_tbl$cap_lib_conc)
 total_tbl$`%_bases_above_15` = as.numeric(total_tbl$percent_bases_above_15)
-
-total_tbl %>% filter(organism.x == 'anthrax' & sample_id != 'not-sequenced') %>% group_by(bc_amp_cycles, amisuccessful) %>% summarise(countf = n())
-total_tbl %>% filter(max_ct > 30 & sample_id != 'not-sequenced') %>% group_by(organism.x, amisuccessful) %>% summarise(n = n())
-
 
 #join mapping data to coverage data to make ST3 final
 #total_tbl = left_join(total_tbl, covtable, by = c('sample_id' = 'sample_id'))
@@ -135,15 +75,6 @@ total_tbl$frac_mapped = total_tbl$mapped_in_baited_region/total_tbl$total.x
 #define successful and unsuccessful samples as frac genome bases over 15X > 80%
 total_tbl = total_tbl %>% mutate(amisuccessful= case_when(percent_bases_above_15 > 0.8 ~ 'yes',
                                                           percent_bases_above_15 < 0.8 ~ 'no'))
-#wo
-#write_csv(total_tbl, '~/Projects/bactocap/metadata/all_metadata.csv')
-
-total_tbl %>% group_by(organism.x) %>% summary(median(frac_mapped))
-
-v = total_tbl %>% filter(organism.x == 'M. amphiforme') 
-v
-summary(na.omit(v$frac_mapped))
-
 
 #############
 #PLOTS
@@ -156,7 +87,7 @@ points = total_tbl %>% dplyr::select(max_ct, organism.x, frac_mapped) %>%
   theme_minimal()+
   theme(legend.text = element_text(face = "italic"))+
   labs(x='Ct', y='Capture Efficiency (Proportion of Mapped Reads)', color = 'Organism')
-points
+
 #plot mean doc by organism
 meandoc <- total_tbl %>% dplyr::select(organism.x, mean) %>% drop_na() %>% 
   ggplot(aes(x = organism.x, y=mean, fill=organism.x)) +
@@ -169,7 +100,6 @@ meandoc <- total_tbl %>% dplyr::select(organism.x, mean) %>% drop_na() %>%
   theme(axis.text.x = element_text(face = "italic"))+
   ylab("Mean Depth-of-Coverage") +
   xlab("Organism")
-meandoc
 
 #baited bases above 15
 genomeabovefifteen<- total_tbl %>% dplyr::select(organism.x, percent_bases_above_15) %>% drop_na() %>% 
@@ -183,7 +113,6 @@ genomeabovefifteen<- total_tbl %>% dplyr::select(organism.x, percent_bases_above
   theme(axis.text.x = element_text(face = "italic"))+
   ylab("Proportion Of Genome Above 15X") +
   xlab("Organism")
-genomeabovefifteen
 
 #duplicates
 duplicates <- total_tbl %>% dplyr::select(organism.x, duplicates, total.x) %>% drop_na() %>% 
@@ -198,7 +127,6 @@ duplicates <- total_tbl %>% dplyr::select(organism.x, duplicates, total.x) %>% d
   theme(axis.text.x = element_text(face = "italic"))+
   ylab("Proportion Duplicates") +
   xlab("Organism")
-duplicates
 
 #cap eff
 fracmapped = total_tbl %>% dplyr::select(organism.x, frac_mapped, total.x) %>% drop_na() %>% 
@@ -212,105 +140,55 @@ fracmapped = total_tbl %>% dplyr::select(organism.x, frac_mapped, total.x) %>% d
   theme(axis.text.x = element_text(face = "italic"))+
   ylab("Proportion Of Total Reads Mapped") +
   xlab("Organism")
-fracmapped
+
+
+#plot figure 1
+plots = cowplot::plot_grid(meandoc, genomeabovefifteen, fracmapped, nrow=1, labels = c('A', 'B', 'C'))
+ggsave(filename = 'fig1plots.tiff', plot = plots, device = grDevices::tiff, path = '../figures_and_tables/', width = 7, height = 2.8)
 
 #############
 #model inference
 
+#update dataframe for modelling: add column with 'yes or no'  factor for pooled:unpooled
 total_tbl = total_tbl %>% mutate(pooledyesno = (case_when(pooled==1 ~ 'yes', TRUE ~ 'no')))
+#change factor labelling for our species to look nicer in plots
 total_tbl$organism.x = factor(total_tbl$organism.x, levels = c("anthrax", "mycoplasma"),
        labels = c("B. anthracis", "M. amphoriforme")
 )
 
-
-total_tbl %>% 
-  ggplot(aes(x=pooledyesno, y =frac_mapped))+
-  geom_boxplot()+
-  geom_jitter()+
-  facet_wrap(~organism.x) + 
-  labs(x='Was The Sample Pooled?', y='Capture Efficiency')+
-  theme_minimal()
-
-cowplot::plot_grid(meandoc, genomeabovefifteen, fracmapped, nrow=1, labels = c('A', 'B', 'C'))
-
-#s = total_tbl[total_tbl$organism.x == 'B. anthracis',]
-#var(s[s$pooledyesno == 'no',]$max_ct)
-
-#fit a model to frac_mapped  (Jess says this is basically logistic regression)
-m0 <- glm(data=total_tbl, frac_mapped ~ max_ct, family=binomial(link="logit"))
-m1 <- glm(data=total_tbl, frac_mapped ~ organism.x*max_ct, family=binomial(link="logit"))
-m2 <- glm(data=total_tbl, frac_mapped ~ organism.x+max_ct, family=binomial(link="logit"))
-m3 <- glm(data=total_tbl, frac_mapped ~ organism.x*I(max_ct^2), family=binomial(link="logit"))
-m4 <- glm(data=total_tbl, frac_mapped ~ organism.x*max_ct+organism.x*cap_lib_conc, family=binomial(link="logit"))
-
 #create 'cap eff' from a vector of proportion column (successes v failures)
 total_tbl$cap_eff = cbind(total_tbl$mapped, (total_tbl$total.x - total_tbl$mapped_in_baited_region))
 
-m5 <- glm(data=total_tbl, cap_eff ~ organism.x*max_ct+organism.x*cap_lib_conc, family=binomial(link="logit"))
-m6 <- glm(data=total_tbl, cap_eff ~ organism.x*max_ct+organism.x*cap_lib_conc, family=binomial)
-m7 <- glm(data=total_tbl, cap_eff ~ organism.x*max_ct+organism.x*cap_lib_conc, family=quasibinomial)
-m7a <- glm(data=total_tbl, cap_eff ~ organism.x*max_ct+cap_lib_conc, family=quasibinomial)
-m7b <- glm(data=total_tbl, cap_eff ~ organism.x+max_ct+cap_lib_conc, family=quasibinomial)
-m7c <- glm(data=total_tbl, cap_eff ~ max_ct+cap_lib_conc, family=quasibinomial)
-
-m7d <- glm(data=total_tbl, cap_eff ~ max_ct+cap_lib_conc, family=binomial)
-?lme4
-#fit glmm
+#add observation level variable to account for high individual variation w/big absolute values
 total_tbl$rowid = seq(1, nrow(total_tbl))
 total_tbl$rowid = as.factor(total_tbl$rowid)
 
-m7e = glmer(data=total_tbl, cap_eff ~ max_ct+cap_lib_conc + (1|rowid), family = binomial)
-summary(m7e)
-drop1(m7e, test="Chisq")
-drop1(m7f, test="Chisq")
-
-MuMIn::r.squaredGLMM(m7e)
-
-
-m7f = glm(data=total_tbl, qlogis(total_tbl$mapped/total_tbl$total.x) ~ max_ct+cap_lib_conc ) 
-summary(m7f)
-t = MuMIn::r.squaredGLMM(m7f)
-
-
+#final model
 m9 = glmer(data=total_tbl, cap_eff ~ max_ct + cap_lib_conc + as.factor(pooledyesno) + (1|rowid), family = binomial)
+#drop1 - which covariates are needed? 
 drop1(m9, test='Chisq')
+#take a look at the model
 summary(m9)
+#r2 of our main model
 MuMIn::r.squaredGLMM(m9)
 
+#run sub-models with dropped covariates to see how informative each covariate is
 m9a = glmer(data=total_tbl, cap_eff ~ as.factor(pooledyesno) + (1|rowid), family = binomial)
 m9b = glmer(data=total_tbl, cap_eff ~  cap_lib_conc  + (1|rowid), family = binomial)
 m9c = glmer(data=total_tbl, cap_eff ~ max_ct + (1|rowid), family = binomial)
-
+#r2 of our manual drop1
 MuMIn::r.squaredGLMM(m9a)
 MuMIn::r.squaredGLMM(m9b)
 MuMIn::r.squaredGLMM(m9c)
 
-
-summary(m9b)
-drop1(m9b, test='Chisq')
-
-
-
-
 modelplot = plot_model(m9, type='pred', terms=c('max_ct'), show.values =T)+theme_minimal()+labs(y='Capture Efficiency', x='Ct', title = 'Model Predictions for Ct ~ Capture Efficiency' )
-modelplot
+fig2plot = cowplot::plot_grid(points, modelplot, labels=c('A', 'B'), rel_widths = c(1.3, 1))
+ggsave(filename = 'fig2plots.tiff', plot = fig2plot, device = grDevices::tiff, path = '../figures_and_tables/', width = 7, height = 2.8)
 
-summary(total_tbl$frac_mapped)
-
-cowplot::plot_grid(points, modelplot, labels=c('A', 'B'), rel_widths = c(1.3, 1))
 
 ####summary stats table
-
-filter(total_tbl)
-
-
-total.sum <- total_tbl %>% filter(sample_id != 'not-sequenced') %>% 
-  rename(
-    Total.Reads = total.x,
-    Mapped.reads.in.baited.region = mapped_in_baited_region,
-    Cap.Eff = frac_mapped,
-    Mean.DOC = mean) %>% 
-  
+total.sum <- total_tbl %>% filter(sample_id != 'not-sequenced' & sample_id != 'AN16-149-1-T_S26') %>% 
+  rename(Total.Reads = total.x,Mapped.reads.in.baited.region = mapped_in_baited_region,Cap.Eff = frac_mapped,Mean.DOC = mean) %>% 
   group_by(organism.x) %>% 
   select(Total.Reads, Mapped.reads.in.baited.region, Cap.Eff, Mean.DOC, `%_bases_above_15`) %>% # select variables to summarise
   summarise_each(funs(min = min, 
@@ -321,6 +199,6 @@ total.sum <- total_tbl %>% filter(sample_id != 'not-sequenced') %>%
                       mean = mean, 
                       sd = sd))
 
-write.csv(total.sum, file = '~/Projects/bactocap/ancillary/metadata/sumstats.csv')
+write.csv(total.sum, file = '../figures_and_tables/sumstats.csv')
 
      
