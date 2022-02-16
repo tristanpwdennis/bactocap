@@ -1,4 +1,4 @@
-# bactocap: Anthrax and Mycoplasma
+# Bactocap: Anthrax and Mycoplasma
 ### Target-enrichment sequencing yields valuable genomic data for difficult-to-culture bacteria of public health importance
 
 This repo contains all the materials required to reproduce the analysis and workflow from the targeted sequence capture project in *Dennis et al, 2022*, see: LINK
