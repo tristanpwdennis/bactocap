@@ -131,7 +131,7 @@ ggsave(filename = 'fig2plots.tiff', plot = fig2plot, device = grDevices::tiff, p
 total.sum <- total_tbl %>% filter(sample_id != 'not-sequenced' & sample_id != 'AN16-149-1-T_S26') %>% 
   rename(Total.Reads = total.x,Mapped.reads.in.baited.region = mapped_in_baited_region,Cap.Eff = frac_mapped,Mean.DOC = mean) %>% 
   group_by(organism.x) %>% 
-  select(Total.Reads, Mapped.reads.in.baited.region, Cap.Eff, Mean.DOC, `%_bases_above_15`) %>% # select variables to summarise
+  select(Total.Reads, Mapped.reads.in.baited.region, Cap.Eff, Mean.DOC, `percent_bases_above_15`) %>% # select variables to summarise
   summarise_each(funs(min = min, 
                       q25 = quantile(., 0.25), 
                       median = median, 
