@@ -1,5 +1,5 @@
 # bactocap
-This repo contains all the materials required to reproduce the analysis and workflow from the bactocap project
+This repo contains all the materials required to reproduce the analysis and workflow from the targeted sequence capture project in *Dennis et al, 2022*
 
 ### Getting started
 
@@ -32,7 +32,7 @@ docker images
 You should see the gatk and align repos are in the list.
 
 ### Data
-When the project is further advanced, the read data for the bactocap project will be available on sra, and I will include fastq-dump commands in the workflow that will enable download of the data. Right now, however, we will have to make do the cheapo way, so please put some trimmed read files of your own into the raw_reads subdirectory, located ```datasets/<dataset>/raw_reads``` - choose whichever is appropriate for your project.
+The raw data are located at PRJEB46822 (_B. anthracis_) and PRJEB50216 (_M. amphoriforme). Download the raw reads into the corresponding dataset/organism/raw_read directories.
 
 ### Running the workflow
 It's as simple as running 
@@ -72,11 +72,11 @@ A tab delimited text file ```mapping_stats.csv``` contains the flagstat data for
 
 ### Analysis
 
-Running the Rscript ```generate_bactocap_metadata.R``` will take the mapping output and parse it into a CSV containing sample metadata, mapping, duplicate and coverage information for anthrax and mycoplasma. Running ```bcanalysisfull.R``` in RStudio will generate plots and model output if run interactively.
+Running the Rscript ```generate_bactocap_metadata.R``` will take the mapping output and parse it into a CSV containing sample metadata, mapping, duplicate and coverage information for anthrax and mycoplasma. Running ```bcanalysisfull.R``` in RStudio will generate plots and tables in the *output* directory. Code and plots can be examined more closely in the ```anthrax_mycoplasma_bactocap.Rmd``` notebook.
 
 ### Pointers
 
-Annotations are located in the `ancillary` directory. Reference genomes are contained in organism-specific directories under `datasets`
+Annotations and metadata are located in the `ancillary` directory. Reference genomes are contained in organism-specific directories under `datasets`
 
 
 
