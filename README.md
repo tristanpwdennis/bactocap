@@ -72,7 +72,7 @@ A tab delimited text file ```mapping_stats.csv``` contains the flagstat data for
 
 ### Analysis
 
-Running the Rscript ```generate_bactocap_metadata.R``` will take the mapping output and parse it into a CSV containing sample metadata, mapping, duplicate and coverage information for anthrax and mycoplasma. Running ```anthrax_mycoplasma_analysis.R``` will generate plots if run in command line. Running in RStudio will let you inspect the output of the models.
+Running the Rscript ```generate_bactocap_metadata.R``` will take the mapping output and parse it into a CSV containing sample metadata, mapping, duplicate and coverage information for anthrax and mycoplasma. Running ```bcanalysisfull.R``` in RStudio will generate plots and model output if run interactively.
 
 ### Pointers
 
