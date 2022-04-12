@@ -141,4 +141,21 @@ total.sum <- total_tbl %>% filter(sample_id != 'not-sequenced' & sample_id != 'A
 
 write.csv(total.sum, file = '../figures_and_tables/sumstats.csv')
 
+####plot ct vs genome coverage
+
+
+sf_ct_menadoc = total_tbl %>% dplyr::select(organism.x, mean,max_ct ) %>% drop_na() %>% 
+  ggplot(aes(x=max_ct, y=mean, colour=organism.x))+
+  geom_point()+
+  scale_colour_manual(values=c("deepskyblue1", "darkorange"), name = "Organism")+
+  theme_minimal() +
+  ylab("Mean Depth-of-Coverage") +
+  xlab("Ct")
+
+ggsave(filename = 'supp_fig_ct_and_meandoc.tiff', plot = sf_ct_menadoc, device = grDevices::tiff, path = '../figures_and_tables/', width = 5, height = 3)
+
+
+
+
+
      
