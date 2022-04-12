@@ -126,6 +126,7 @@ fig2plot = cowplot::plot_grid(points, modelplot, labels=c('A', 'B'), rel_widths 
 ggsave(filename = 'fig2plots.tiff', plot = fig2plot, device = grDevices::tiff, path = '../figures_and_tables/', width = 7, height = 2.8)
 
 
+
 ####summary stats table
 total.sum <- total_tbl %>% filter(sample_id != 'not-sequenced' & sample_id != 'AN16-149-1-T_S26') %>% 
   rename(Total.Reads = total.x,Mapped.reads.in.baited.region = mapped_in_baited_region,Cap.Eff = frac_mapped,Mean.DOC = mean) %>% 
@@ -142,8 +143,6 @@ total.sum <- total_tbl %>% filter(sample_id != 'not-sequenced' & sample_id != 'A
 write.csv(total.sum, file = '../figures_and_tables/sumstats.csv')
 
 ####plot ct vs genome coverage
-
-
 sf_ct_menadoc = total_tbl %>% dplyr::select(organism.x, mean,max_ct ) %>% drop_na() %>% 
   ggplot(aes(x=max_ct, y=mean, colour=organism.x))+
   geom_point()+
@@ -152,10 +151,18 @@ sf_ct_menadoc = total_tbl %>% dplyr::select(organism.x, mean,max_ct ) %>% drop_n
   ylab("Mean Depth-of-Coverage") +
   xlab("Ct")
 
-ggsave(filename = 'supp_fig_ct_and_meandoc.tiff', plot = sf_ct_menadoc, device = grDevices::tiff, path = '../figures_and_tables/', width = 5, height = 3)
+ggsave(filename = 'fig_s3.tiff', plot = sf_ct_menadoc, device = grDevices::tiff, path = '../figures_and_tables/', width = 5, height = 3)
 
+#ploit effect of pooling by organism on cap eff
+pooledplot = ggplot(total_tbl, aes(x=pooledyesno, y=frac_mapped))+
+  facet_wrap(~organism.x)+
+  geom_boxplot()+
+  geom_jitter()+
+  theme_minimal()+
+  labs(x='Was the sample pooled?', y='Capture efficiency')
+ggsave(filename = 'fig_s2.tiff', plot = pooledplot, device = grDevices::tiff, path = '../figures_and_tables/')
 
+#plot model predictions for cap eff vs cap lib conc
+capeff_clc_plot = plot_model(m9b, type='pred', terms=c('cap_lib_conc'), show.values =F)+theme_minimal()+labs(y='Capture Efficiency', x='Captured Library Concentration (ng/ul)', title = 'Model Predictions for Captured Library Concentration ~ Capture Efficiency' )
+ggsave(filename = 'fig_s1.tiff', plot = capeff_clc_plot, device = grDevices::tiff, path = '../figures_and_tables/')
 
-
-
-     
