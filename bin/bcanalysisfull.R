@@ -113,7 +113,6 @@ summary(m9)
 #r2 of our main model
 MuMIn::r.squaredGLMM(m9)
 
-#run sub-models with dropped covariates to see how informative each covariate is
 m9a = glmer(data=total_tbl, cap_eff ~ as.factor(pooledyesno) + (1|rowid), family = binomial)
 m9b = glmer(data=total_tbl, cap_eff ~  cap_lib_conc  + (1|rowid), family = binomial)
 m9c = glmer(data=total_tbl, cap_eff ~ max_ct + (1|rowid), family = binomial)
