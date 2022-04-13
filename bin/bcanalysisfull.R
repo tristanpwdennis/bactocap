@@ -163,6 +163,25 @@ pooledplot = ggplot(total_tbl, aes(x=pooledyesno, y=frac_mapped))+
 ggsave(filename = 'fig_s2.tiff', plot = pooledplot, device = grDevices::tiff, path = '../figures_and_tables/')
 
 #plot model predictions for cap eff vs cap lib conc
-capeff_clc_plot = plot_model(m9b, type='pred', terms=c('cap_lib_conc'), show.values =F)+theme_minimal()+labs(y='Capture Efficiency', x='Captured Library Concentration (ng/ul)', title = 'Model Predictions for Captured Library Concentration ~ Capture Efficiency' )
+capeff_clc_plot = plot_model(m9, type='pred', terms=c('cap_lib_conc'), show.values =T)+theme_minimal()+labs(y='Capture Efficiency', x='Captured Library Concentration', title = 'Captured Library Concentration ~ Capture Efficiency' )
+
 ggsave(filename = 'fig_s1.tiff', plot = capeff_clc_plot, device = grDevices::tiff, path = '../figures_and_tables/')
+
+
+#parse kraken reports and turn into supp tabs
+mycokrakenreps = list.files('../datasets/mycoplasma/results/', pattern = 'flatkrakrep')
+ankrakenreps = list.files('../datasets/anthrax/results/', pattern = 'flatkrakrep')
+mycokrakdata = lapply(seq_along(mycokrakenreps), function(i){fread(paste0('../datasets/mycoplasma/results/',mycokrakenreps[[i]])) %>% mutate(fn=mycokrakenreps[[i]])}) #fread all, adding filename as col
+anthkrakdata = lapply(seq_along(ankrakenreps), function(i){fread(paste0('../datasets/anthrax/results/',ankrakenreps[[i]])) %>% mutate(fn=ankrakenreps[[i]])}) #fread all, adding filename as col
+mycokrakdata = do.call(rbind, mycokrakdata) 
+anthkrakdata = do.call(rbind, anthkrakdata) 
+anthkrakdata$organism = 'B. anthracis'
+mycokrakdata$organism = 'M. amphoriforme'
+allkrakdata = rbind(mycokrakdata, anthkrakdata)
+allkrakdata = allkrakdata[V1 > 1]
+allkrakdata = allkrakdata[V4 == 'G' | V4 == 'U']
+allkrakdata$fn = gsub('.flatkrakrep', '', allkrakdata$fn)
+antab = allkrakdata %>% dplyr::select(organism, fn, V1, V6) %>% filter(organism == 'B. anthracis')
+mycotab = allkrakdata %>% dplyr::select(organism, fn, V1, V6) %>% filter(organism == 'M. amphoriforme')
+write.csv(mycotab, file = '../figures_and_tables/st6.csv')
 
