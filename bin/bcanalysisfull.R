@@ -18,6 +18,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 #read metadata
 total_tbl = read.csv('~/Projects/bactocap/ancillary/metadata/all_metadata.csv')
 
+
 #############
 #PLOTS
 
@@ -85,7 +86,7 @@ fracmapped = total_tbl %>% dplyr::select(organism.x, frac_mapped, total.x) %>% d
 
 #plot figure 1
 plots = cowplot::plot_grid(meandoc, genomeabovefifteen, fracmapped, nrow=1, labels = c('A', 'B', 'C'))
-ggsave(filename = 'fig1plots.tiff', plot = plots, device = grDevices::tiff, path = '../figures_and_tables/', width = 7, height = 2.8)
+ggsave(filename = 'fig1plots.tiff', plot = plots, device = grDevices::tiff, path = '../figures_and_tables/', width = 10, height = 3.4)
 
 #############
 #model inference
@@ -123,7 +124,7 @@ MuMIn::r.squaredGLMM(m9c)
 
 modelplot = plot_model(m9, type='pred', terms=c('max_ct'), show.values =T)+theme_minimal()+labs(y='Capture Efficiency', x='Ct', title = 'Model Predictions for Ct ~ Capture Efficiency' )
 fig2plot = cowplot::plot_grid(points, modelplot, labels=c('A', 'B'), rel_widths = c(1.3, 1))
-ggsave(filename = 'fig2plots.tiff', plot = fig2plot, device = grDevices::tiff, path = '../figures_and_tables/', width = 7, height = 2.8)
+ggsave(filename = 'fig2plots.tiff', plot = fig2plot, device = grDevices::tiff, path = '../figures_and_tables/', width = 10, height = 4.2)
 
 
 
